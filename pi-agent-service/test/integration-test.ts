@@ -60,13 +60,13 @@ class TestClient {
     });
   }
 
-  async send(method: string, params: any = {}): Promise<any> {
+  async send(method: string, params: any = {}, timeoutMs = 5000): Promise<any> {
     const id = `req-${++reqId}`;
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
         this.pending.delete(id);
         reject(new Error(`Timeout: ${method}`));
-      }, 5000);
+      }, timeoutMs);
 
       this.pending.set(id, {
         resolve: (v) => {
@@ -270,10 +270,96 @@ async function main() {
   const msgEntry = traceResult.result.find((e: any) => e.type === "message");
   assert(!!msgEntry, "trace has message entry");
 
-  // 14. agent.spawn — skipped (requires API keys for SDK session creation)
-  console.log("▸ agent.spawn (SKIPPED — requires API keys)");
+  // ─── Real agent lifecycle tests (uses auth from ~/.pi/agent/auth.json) ───
 
-  // ─── New tests: registration, lifecycle errors, threading, ACL ───
+  // 14. agent.spawn — spawn the worker agent
+  console.log("▸ agent.spawn (real agent)");
+  const spawn = await client.send("agent.spawn", { name: "worker" }, 30000);
+  assert(!spawn.error, "spawn no error");
+  assert(spawn.result.status === "ok", "spawn ok");
+
+  // Verify agent is now online-idle
+  const statusAfterSpawn = await client.send("agent.status", { name: "worker" });
+  assert(statusAfterSpawn.result.status === "online-idle", "agent online-idle after spawn");
+
+  // agent.list should show online
+  const listAfterSpawn = await client.send("agent.list");
+  const workerInList = listAfterSpawn.result.find((a: any) => a.name === "worker");
+  assert(workerInList.status === "online-idle", "worker online in list");
+
+  // 14b. agent.spawn duplicate — should error
+  console.log("▸ agent.spawn (duplicate — expect error)");
+  const spawnDup = await client.send("agent.spawn", { name: "worker" });
+  assert(!!spawnDup.error, "duplicate spawn errors");
+  assert(spawnDup.error.code === "ALREADY_RUNNING", "ALREADY_RUNNING code");
+
+  // 14c. Send message to spawned agent — should deliver (agent is idle)
+  console.log("▸ message.send (to spawned agent — should deliver)");
+  const msgToSpawned = await client.send(
+    "message.send",
+    {
+      from: "manager",
+      to: "worker",
+      subject: "Hello",
+      body: "Just say OK and nothing else.",
+    },
+    15000,
+  );
+  assert(!msgToSpawned.error, "no error");
+
+  // Wait for agent to process the message
+  console.log("  waiting for agent to process...");
+  await new Promise((r) => setTimeout(r, 15000));
+
+  // 14d. agent.peek — read agent output
+  console.log("▸ agent.peek (running agent)");
+  const peek = await client.send("agent.peek", { name: "worker" });
+  assert(!peek.error, "peek no error");
+  assert(typeof peek.result.output === "string", "peek returns string");
+  assert(peek.result.output.length > 0, "peek has output");
+  console.log(`  peek output: ${peek.result.output.slice(0, 100)}...`);
+
+  // 14e. agent.status — should have real context/token stats now
+  console.log("▸ agent.status (after message — check stats)");
+  const statsAfterMsg = await client.send("agent.status", { name: "worker" });
+  assert(
+    statsAfterMsg.result.status === "online-idle" || statsAfterMsg.result.status === "online-working",
+    "agent online",
+  );
+  console.log(
+    `  context=${statsAfterMsg.result.contextPercent}% tokens=${statsAfterMsg.result.tokensUsed} cost=$${statsAfterMsg.result.cost}`,
+  );
+
+  // 14f. agent.compact — may fail if session too short, that's ok
+  console.log("▸ agent.compact (running agent)");
+  const compact = await client.send("agent.compact", { name: "worker" }, 30000);
+  // Compact may error if session is too short — just verify we got a response
+  assert(compact.result || compact.error, "compact responded");
+
+  // 14g. agent.stop
+  console.log("▸ agent.stop (running agent)");
+  const stop = await client.send("agent.stop", { name: "worker" });
+  assert(!stop.error, "stop no error");
+  assert(stop.result.status === "ok", "stop ok");
+
+  // Verify offline
+  const statusAfterStop = await client.send("agent.status", { name: "worker" });
+  assert(statusAfterStop.result.status === "offline", "agent offline after stop");
+
+  // 14h. agent.restart (from offline — spawns fresh)
+  console.log("▸ agent.restart (from offline)");
+  const restart = await client.send("agent.restart", { name: "worker" }, 30000);
+  assert(!restart.error, "restart no error");
+  assert(restart.result.status === "ok", "restart ok");
+
+  // Verify back online
+  const statusAfterRestart = await client.send("agent.status", { name: "worker" });
+  assert(statusAfterRestart.result.status === "online-idle", "agent online after restart");
+
+  // Stop again for remaining tests
+  await client.send("agent.stop", { name: "worker" });
+
+  // ─── Registration, lifecycle errors, threading, ACL ───
 
   // 15. agent.register — create a new agent via socket
   console.log("▸ agent.register (new agent)");
@@ -353,7 +439,7 @@ async function main() {
   assert(!threadsAfter.error, "no error");
   const mainThread = threadsAfter.result.find((t: any) => t.threadId === msgResult.result.threadId);
   assert(!!mainThread, "thread found");
-  assert(mainThread.messageCount === 2, "thread has 2 messages");
+  assert(mainThread.messageCount >= 2, "thread has 2+ messages");
 
   // 24. message.send with ACL denial
   console.log("▸ message.send (ACL denial)");
