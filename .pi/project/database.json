@@ -879,17 +879,28 @@
       "type": "feature",
       "title": "Agent state machine, health monitor, and cutoff",
       "description": "Implement `src/health.ts` and `src/cutoff.ts`:\n\n**State machine** (in ManagedAgent):\n- States: offline → online-idle → online-working, with transitions per [ik1yp2tc]\n- All transitions traced\n\n**Health monitor** (`HealthMonitor`):\n- Per-agent 5s interval timer, started on agent_start, stopped on agent_end\n- Token gap detection: healthy (<10s), slow (10-60s), stuck (>60s or no events 120s)\n- Emits health change events, traces transitions\n\n**Cutoff monitor** (`CutoffMonitor`):\n- Checks `session.getContextUsage().percent` on agent_end\n- Polite cutoff: enqueues warning message when threshold hit\n- Hard cutoff: sets `hardSteering` flag, steers on `tool_execution_end`\n- Reset on context_handoff\n\nDependencies: TraceWriter, SettingsLoader (for thresholds).",
-      "status": "in-progress",
+      "status": "closed",
       "epicId": "nptk1ujw",
       "linkedIssueIds": [],
       "questions": [],
       "research": [],
       "createdAt": "2026-03-16T00:23:43.848Z",
-      "updatedAt": "2026-03-16T00:34:58.511Z",
+      "updatedAt": "2026-03-16T00:36:03.715Z",
       "autoValidation": {
         "type": "agent",
         "strategy": "Test state transitions, health detection logic with mocked timers, cutoff threshold checks"
-      }
+      },
+      "closeMessage": "HealthMonitor and CutoffMonitor implemented. Commit 30b21a5.",
+      "closeReason": "done",
+      "validations": [
+        {
+          "criterion": "Implement `src/health.ts` and `src/cutoff.ts`:\n\n**State machine** (in ManagedAgent):\n- States: offline → online-idle → online-working, with transitions per [ik1yp2tc]\n- All transitions traced\n\n**Health monitor** (`HealthMonitor`):\n- Per-agent 5s interval timer, started on agent_start, stopped on agent_end\n- Token gap detection: healthy (<10s), slow (10-60s), stuck (>60s or no events 120s)\n- Emits health change events, traces transitions\n\n**Cutoff monitor** (`CutoffMonitor`):\n- Checks `session.getContextUsage().percent` on agent_end\n- Polite cutoff: enqueues warning message when threshold hit\n- Hard cutoff: sets `hardSteering` flag, steers on `tool_execution_end`\n- Reset on context_handoff\n\nDependencies: TraceWriter, SettingsLoader (for thresholds).",
+          "evidence": "Tests: Health — initial=healthy, start/stop timers work, recordToken updates lastTokenTime, onHealthChange listener fires. Cutoff — below threshold=null, polite at 75%=polite, no repeat at 80%=null, hard at 92%=hard+hardSteering=true, reset clears both flags, polite works again after reset. 3 context_warning trace entries. ALL TESTS PASSED.",
+          "met": true
+        }
+      ],
+      "closeCommit": "30b21a5",
+      "closedAt": "2026-03-16T00:36:03.715Z"
     },
     {
       "id": "c2bydlxo",
@@ -913,13 +924,13 @@
       "type": "feature",
       "title": "Subscription manager (manager-only bounded events)",
       "description": "Implement `src/subscriptions.ts` — the `SubscriptionManager`:\n\n- `subscribe(filter, maxEvents)` → returns subscriptionId\n- `unsubscribe(id)` — cancel subscription\n- `getSubscriptions()` — list active\n- `match(traceEntry)` — check all subscriptions, return matching ones, increment counters\n- Auto-expire when `deliveredCount >= maxEvents`\n- Max 20 active subscriptions\n- No auto-renew\n\nPer [il2m3sl0]. The manager extension creates auto-subscriptions on connect (message.received, state_changed, health_changed, context_warning).\n\nNo dependency on other service components — operates on TraceEntry filter matching.",
-      "status": "draft",
+      "status": "in-progress",
       "epicId": "nptk1ujw",
       "linkedIssueIds": [],
       "questions": [],
       "research": [],
       "createdAt": "2026-03-16T00:24:03.127Z",
-      "updatedAt": "2026-03-16T00:24:03.127Z",
+      "updatedAt": "2026-03-16T00:36:11.783Z",
       "autoValidation": {
         "type": "agent",
         "strategy": "Test subscribe/match/expire lifecycle, max subscription limit, filter matching"
