@@ -795,30 +795,41 @@
       "type": "feature",
       "title": "Settings loader with fs.watch and default merging",
       "description": "Implement `src/settings.ts` — the `SettingsLoader` class:\n\n- `SettingsLoader.create(projectRoot, settingsPath?)` — async factory\n- Reads and parses `settings.json` with full schema validation\n- Deep merges missing fields into existing files (both settings.json and per-agent agent.json)\n- `fs.watch()` on settings.json — on change, re-reads and updates in-memory state\n- Emits change events (simple EventEmitter) so other components react to ACL/config changes\n- `getSettings()`, `getAgentConfig(name)`, `getAcl()`, `reloadSettings()`\n- `updateAcl(rules)` — writes back to settings.json\n\nSchemas defined in asset [n2j36dl7]. No dependency on other service components.",
-      "status": "in-progress",
+      "status": "closed",
       "epicId": "nptk1ujw",
       "linkedIssueIds": [],
       "questions": [],
       "research": [],
       "createdAt": "2026-03-16T00:23:17.326Z",
-      "updatedAt": "2026-03-16T00:31:16.487Z",
+      "updatedAt": "2026-03-16T00:32:29.986Z",
       "autoValidation": {
         "type": "agent",
         "strategy": "Write unit tests that verify: default creation, field merging, ACL read/write, change event emission"
-      }
+      },
+      "closeMessage": "SettingsLoader implemented with fs.watch, deep merge, ACL updates, per-agent config resolution. Commit c7073bd.",
+      "closeReason": "done",
+      "validations": [
+        {
+          "criterion": "Implement `src/settings.ts` — the `SettingsLoader` class:\n\n- `SettingsLoader.create(projectRoot, settingsPath?)` — async factory\n- Reads and parses `settings.json` with full schema validation\n- Deep merges missing fields into existing files (both settings.json and per-agent agent.json)\n- `fs.watch()` on settings.json — on change, re-reads and updates in-memory state\n- Emits change events (simple EventEmitter) so other components react to ACL/config changes\n- `getSettings()`, `getAgentConfig(name)`, `getAcl()`, `reloadSettings()`\n- `updateAcl(rules)` — writes back to settings.json\n\nSchemas defined in asset [n2j36dl7]. No dependency on other service components.",
+          "evidence": "Ran test script that verified: 1) Default creation — settings.json created with keys: acl,agents,defaults,monitor,service. 2) Field merging — wrote partial {defaults:{model:\"gpt-4o\"}}, reloaded, got model=gpt-4o but provider=anthropic (from defaults). 3) ACL write — updateAcl wrote [{from:\"worker\",to:[\"manager\"]}] and verified on disk. 4) Events — reloadSettings emits changed/acl_changed events (used in test). Output: ALL TESTS PASSED.",
+          "met": true
+        }
+      ],
+      "closeCommit": "c7073bd",
+      "closedAt": "2026-03-16T00:32:29.986Z"
     },
     {
       "id": "ppztb9ue",
       "type": "feature",
       "title": "Trace writer and query API",
       "description": "Implement `src/trace.ts` — the `TraceWriter` class:\n\n- Append-only JSONL to `service.trace_file` path\n- `append(entry)` — assigns nanoid `id`, ISO timestamp, writes line\n- `query(opts)` — sequential scan from end, filters by agent/type/threadId/after/before/limit\n- All 13 entry types from asset [f5z68c4v]\n- File auto-created on first write\n- Graceful handling of missing/corrupt file\n\nNo dependency on other service components — standalone module.",
-      "status": "draft",
+      "status": "in-progress",
       "epicId": "nptk1ujw",
       "linkedIssueIds": [],
       "questions": [],
       "research": [],
       "createdAt": "2026-03-16T00:23:25.130Z",
-      "updatedAt": "2026-03-16T00:23:25.130Z",
+      "updatedAt": "2026-03-16T00:32:37.716Z",
       "autoValidation": {
         "type": "agent",
         "strategy": "Write tests that append entries, query with filters, verify JSONL format"
