@@ -8,6 +8,8 @@
  * References: assets [i5eisc9o], [0osnjjl4], [ik1yp2tc]
  */
 
+import * as fs from "node:fs";
+import * as os from "node:os";
 import * as path from "node:path";
 import { getModel } from "@mariozechner/pi-ai";
 import {
@@ -156,10 +158,17 @@ export class AgentManager {
       compaction: { enabled: false },
     });
 
+    // Resolve extension paths from agent config
+    const extensionPaths = this.resolveExtensionPaths(config.extensions);
+
     const loader = new DefaultResourceLoader({
       cwd: this.projectRoot,
       agentDir: path.join(this.projectRoot, ".pi", "agent-sessions", name),
       settingsManager,
+      additionalExtensionPaths: extensionPaths,
+      noSkills: true,
+      noPromptTemplates: true,
+      noThemes: true,
       systemPromptOverride: () => buildSystemPrompt(name, promptDeps),
     });
     await loader.reload();
@@ -294,13 +303,16 @@ export class AgentManager {
     const stats = this.router.getStats(name);
     const uptime = managed?.spawnedAt ? (Date.now() - managed.spawnedAt) / 1000 : 0;
 
+    const ctx = managed?.session?.getContextUsage();
+    const sessionStats = managed?.session?.getSessionStats();
+
     return {
       name,
       status: managed?.status ?? "offline",
       health: managed ? this.health.getHealth(name) : "healthy",
-      contextPercent: 0, // TODO: get from session
-      tokensUsed: 0,
-      cost: 0,
+      contextPercent: ctx?.percent ?? 0,
+      tokensUsed: sessionStats?.tokens.total ?? 0,
+      cost: sessionStats?.cost ?? 0,
       messageStats: stats,
       uptime,
       lastActivity: new Date().toISOString(),
@@ -311,17 +323,44 @@ export class AgentManager {
     const configs = this.settings.getAllAgentConfigs();
     return configs.map((c) => {
       const managed = this.agents.get(c.name);
+      const ctx = managed?.session?.getContextUsage();
       return {
         name: c.name,
         status: managed?.status ?? "offline",
         health: managed ? this.health.getHealth(c.name) : "healthy",
-        contextPercent: 0,
+        contextPercent: ctx?.percent ?? 0,
       };
     });
   }
 
   getAgentConfig(name: string): AgentConfig | undefined {
     return this.settings.getAgentConfig(name);
+  }
+
+  /**
+   * Peek at an agent's recent messages (for observability).
+   */
+  peekAgent(name: string, lines?: number): { output: string } {
+    const managed = this.agents.get(name);
+    if (!managed?.session) {
+      throw new ManagerError("NOT_RUNNING", `Agent ${name} is not running`);
+    }
+
+    const limit = lines ?? 20;
+    const messages = managed.session.messages.slice(-limit);
+    const output = messages
+      .map((m) => {
+        if (m.role === "assistant" && m.content) {
+          return `[assistant] ${typeof m.content === "string" ? m.content : JSON.stringify(m.content)}`;
+        }
+        if (m.role === "user" && m.content) {
+          return `[user] ${typeof m.content === "string" ? m.content : JSON.stringify(m.content)}`;
+        }
+        return `[${m.role}] (message)`;
+      })
+      .join("\n");
+
+    return { output: output.slice(-5000) }; // cap at 5KB
   }
 
   // ─── Messaging ────────────────────────────────────────────────
@@ -417,6 +456,116 @@ export class AgentManager {
     return this.agents.size;
   }
 
+  // ─── Agent Registration ────────────────────────────────────────
+
+  /**
+   * Register a new agent. Creates folder + config files, adds to settings.
+   */
+  async registerAgent(name: string, agentPath?: string): Promise<{ status: string; scaffolded: boolean }> {
+    const resolvedPath = agentPath ?? path.join(this.projectRoot, ".pi", "agents", name);
+    const absPath = path.isAbsolute(resolvedPath) ? resolvedPath : path.join(this.projectRoot, resolvedPath);
+
+    // Create folder + files if needed
+    let scaffolded = false;
+    if (!fs.existsSync(absPath)) {
+      fs.mkdirSync(absPath, { recursive: true });
+      scaffolded = true;
+    }
+
+    const configPath = path.join(absPath, "agent.json");
+    if (!fs.existsSync(configPath)) {
+      fs.writeFileSync(
+        configPath,
+        `${JSON.stringify({ name, brief: "TODO: Describe what this agent does.", auto_spawn: false }, null, 2)}\n`,
+      );
+      scaffolded = true;
+    }
+
+    const systemPath = path.join(absPath, "SYSTEM.md");
+    if (!fs.existsSync(systemPath)) {
+      fs.writeFileSync(systemPath, `# Agent: ${name}\n\nTODO: Define this agent's role.\n`);
+      scaffolded = true;
+    }
+
+    const agentsPath = path.join(absPath, "AGENTS.md");
+    if (!fs.existsSync(agentsPath)) {
+      fs.writeFileSync(agentsPath, "");
+      scaffolded = true;
+    }
+
+    // Add to settings.agents if not already there
+    const settings = this.settings.getSettings();
+    const relPath = path.isAbsolute(resolvedPath) ? resolvedPath : resolvedPath;
+    if (!settings.agents.includes(relPath)) {
+      settings.agents.push(relPath);
+      // Also add default ACL: manager↔agent
+      const hasAcl = settings.acl.some((r) => r.from === name);
+      if (!hasAcl) {
+        settings.acl.push({ from: name, to: ["manager"] });
+      }
+      // Write updated settings and reload
+      await this.settings.updateSettings({ agents: settings.agents, acl: settings.acl });
+      await this.settings.reloadSettings();
+    }
+
+    return { status: "ok", scaffolded };
+  }
+
+  /**
+   * Unregister an agent. Removes from settings but doesn't delete folder.
+   */
+  async unregisterAgent(name: string): Promise<void> {
+    const settings = this.settings.getSettings();
+    settings.agents = settings.agents.filter((_p) => {
+      const config = this.settings.getAgentConfig(name);
+      return config?.name !== name;
+    });
+    await this.settings.reloadSettings();
+  }
+
+  // ─── Internal: Extension Resolution ───────────────────────────
+
+  /**
+   * Resolve extension names to file paths.
+   * Checks: ~/.pi/packagemanager/packages/{name}/extensions/
+   */
+  private resolveExtensionPaths(extensions: string[]): string[] {
+    const paths: string[] = [];
+    const pmDir = path.join(os.homedir(), ".pi", "packagemanager", "packages");
+
+    for (const ext of extensions) {
+      // Try direct name
+      const extDir = path.join(pmDir, ext, "extensions");
+      if (fs.existsSync(extDir)) {
+        const files = fs.readdirSync(extDir).filter((f) => f.endsWith(".ts") || f.endsWith(".js"));
+        for (const f of files) {
+          paths.push(path.join(extDir, f));
+        }
+        continue;
+      }
+
+      // Try with pi-extension- prefix
+      const prefixedDir = path.join(pmDir, `pi-extension-${ext}`, "extensions");
+      if (fs.existsSync(prefixedDir)) {
+        const files = fs.readdirSync(prefixedDir).filter((f) => f.endsWith(".ts") || f.endsWith(".js"));
+        for (const f of files) {
+          paths.push(path.join(prefixedDir, f));
+        }
+        continue;
+      }
+
+      // Try as absolute path
+      if (path.isAbsolute(ext) && fs.existsSync(ext)) {
+        paths.push(ext);
+        continue;
+      }
+
+      console.warn(`Extension not found: ${ext}`);
+    }
+
+    return paths;
+  }
+
   // ─── Internal: Session Event Handling ─────────────────────────
 
   private handleSessionEvent(agentName: string, event: any): void {
@@ -434,8 +583,7 @@ export class AgentManager {
         this.health.stop(agentName);
 
         // Check cutoff
-        // TODO: get actual context percent from session
-        const pct = 0;
+        const pct = managed.session?.getContextUsage()?.percent ?? 0;
         const warning = this.cutoff.checkOnAgentEnd(
           agentName,
           pct,
@@ -462,7 +610,7 @@ export class AgentManager {
       case "tool_execution_end":
         if (this.cutoff.isHardSteering(agentName) && managed.session) {
           managed.session.steer(
-            this.cutoff.getSteerMessage(agentName, 0), // TODO: real percent
+            this.cutoff.getSteerMessage(agentName, managed.session?.getContextUsage()?.percent ?? 0),
           );
         }
         break;
@@ -577,7 +725,7 @@ export class AgentManager {
         this.trace.append({
           type: "context_reset",
           agent: name,
-          percent: 0, // TODO: real percent
+          percent: managed.session?.getContextUsage()?.percent ?? 0,
           summary,
           continueMessage,
         } as any);
@@ -593,9 +741,18 @@ export class AgentManager {
         const prompt = `${continueMessage}\n\n${overview}\n\n### Previous Session Handoff\n${summary}`;
         await managed.session.prompt(prompt);
       },
-      getContextPercent: () => 0, // TODO
-      getTokensUsed: () => 0, // TODO
-      getCost: () => 0, // TODO
+      getContextPercent: (n) => {
+        const m = this.agents.get(n);
+        return m?.session?.getContextUsage()?.percent ?? 0;
+      },
+      getTokensUsed: (n) => {
+        const m = this.agents.get(n);
+        return m?.session?.getSessionStats()?.tokens.total ?? 0;
+      },
+      getCost: (n) => {
+        const m = this.agents.get(n);
+        return m?.session?.getSessionStats()?.cost ?? 0;
+      },
       getUptime: (name) => {
         const m = this.agents.get(name);
         return m?.spawnedAt ? (Date.now() - m.spawnedAt) / 1000 : 0;

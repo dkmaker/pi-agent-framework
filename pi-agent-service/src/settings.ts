@@ -93,6 +93,15 @@ export class SettingsLoader extends EventEmitter<SettingsEvents> {
   }
 
   /**
+   * Update the full settings object and write to disk.
+   */
+  async updateSettings(updates: Partial<Settings>): Promise<void> {
+    Object.assign(this.settings, updates);
+    await this.writeSettings();
+    this.emit("changed", this.settings);
+  }
+
+  /**
    * Resolve the absolute path for an agent folder.
    */
   resolveAgentPath(agentPath: string): string {

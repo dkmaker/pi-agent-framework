@@ -171,8 +171,7 @@ export class UnixSocketAdapter {
         return this.manager.getAgentConfig(params.name as string);
 
       case "agent.peek":
-        // TODO: implement peek (agent output capture)
-        return { output: "" };
+        return this.manager.peekAgent(params.name as string, params.lines as number | undefined);
 
       // Messaging
       case "message.send":
@@ -228,11 +227,10 @@ export class UnixSocketAdapter {
 
       // Agent Registration (delegated to settings)
       case "agent.register":
-        // TODO: implement full registration logic
-        return { status: "ok" };
+        return this.manager.registerAgent(params.name as string, params.path as string | undefined);
 
       case "agent.unregister":
-        // TODO: implement unregistration
+        await this.manager.unregisterAgent(params.name as string);
         return { status: "ok" };
 
       // Service

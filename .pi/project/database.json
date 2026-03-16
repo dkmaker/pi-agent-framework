@@ -1103,16 +1103,81 @@
       "type": "chore",
       "title": "Add Biome linter and formatter — zero issues",
       "description": "Add Biome as linter and formatter for pi-agent-service:\n\n1. Install `@biomejs/biome` as devDependency\n2. Create `biome.json` config (sensible defaults, match project style — tabs/spaces, quotes, etc.)\n3. Add npm scripts: `lint`, `format`, `format:check`\n4. Fix ALL lint and formatting issues across `src/` and `test/`\n5. Zero errors on `npm run lint` and `npm run format:check`",
-      "status": "in-progress",
+      "status": "closed",
       "epicId": "nptk1ujw",
       "linkedIssueIds": [],
       "questions": [],
       "research": [],
       "createdAt": "2026-03-16T00:53:46.817Z",
-      "updatedAt": "2026-03-16T00:53:54.739Z",
+      "updatedAt": "2026-03-16T00:55:09.091Z",
       "autoValidation": {
         "type": "agent",
         "strategy": "Run npm run lint and npm run format:check — both must exit 0 with no issues"
+      },
+      "closeMessage": "Biome linter/formatter added — zero issues. Commit 213e6f3.",
+      "closeReason": "done",
+      "validations": [
+        {
+          "criterion": "Add Biome as linter and formatter for pi-agent-service:\n\n1. Install `@biomejs/biome` as devDependency\n2. Create `biome.json` config (sensible defaults, match project style — tabs/spaces, quotes, etc.)\n3. Add npm scripts: `lint`, `format`, `format:check`\n4. Fix ALL lint and formatting issues across `src/` and `test/`\n5. Zero errors on `npm run lint` and `npm run format:check`",
+          "evidence": "biome check: \"Checked 16 files. No fixes applied.\" (0 issues). biome format: \"Checked 16 files. No fixes applied.\" (0 issues). tsc --noEmit: CLEAN. npm test: 61 passed. npm run test:integration: 47 passed.",
+          "met": true
+        }
+      ],
+      "closeCommit": "213e6f3",
+      "closedAt": "2026-03-16T00:55:09.091Z"
+    },
+    {
+      "id": "rp72xzdz",
+      "type": "spike",
+      "title": "E2E test: spawn alice + bob, message-driven conversation with web search",
+      "description": "Create a test script that:\n\n1. Starts the agent service with two agents: alice and bob\n2. Bob has web-search extension enabled\n3. ACL allows alice↔bob + manager↔both\n4. Manager sends a message to alice asking her to ask bob to research something\n5. Observe the message chain: manager→alice→bob (web search)→alice→manager\n\nThis proves: agent spawning, message delivery, tool execution, inter-agent communication, and extensions all work end-to-end.",
+      "status": "closed",
+      "epicId": "nptk1ujw",
+      "linkedIssueIds": [
+        "liau7o3p"
+      ],
+      "questions": [],
+      "research": [
+        {
+          "type": "comment",
+          "content": "**Blocked by:** [liau7o3p] — agent.register, extension loading, and context stats must be implemented first. Cannot spawn agents with extensions until those TODOs are fixed.",
+          "addedAt": "2026-03-16T01:00:38.788Z"
+        }
+      ],
+      "createdAt": "2026-03-16T00:55:54.496Z",
+      "updatedAt": "2026-03-16T01:01:24.216Z",
+      "autoValidation": {
+        "type": "agent",
+        "strategy": "Run the script and observe agents communicating via trace output"
+      },
+      "closeMessage": "Deferred pending TODO fixes (liau7o3p).",
+      "closeReason": "deferred",
+      "validations": [
+        {
+          "criterion": "Create a test script that:\n\n1. Starts the agent service with two agents: alice and bob\n2. Bob has web-search extension enabled\n3. ACL allows alice↔bob + manager↔both\n4. Manager sends a message to alice asking her to ask bob to research something\n5. Observe the message chain: manager→alice→bob (web search)→alice→manager\n\nThis proves: agent spawning, message delivery, tool execution, inter-agent communication, and extensions all work end-to-end.",
+          "evidence": "User approved: \"Yes, defer and fix TODOs first\". Cannot validate — blocked by unimplemented agent.register, extension loading, context stats.",
+          "met": false
+        }
+      ],
+      "closedAt": "2026-03-16T01:01:24.216Z"
+    },
+    {
+      "id": "liau7o3p",
+      "type": "bug",
+      "title": "Fix all agent service TODOs — registration, extensions, context stats, peek",
+      "description": "There are 11 TODOs across the agent service that were left as stubs during initial implementation. All belong to THIS epic per the requirement assets.\n\n**Fixes needed:**\n\n1. **`agent.register` / `agent.unregister`** (unix-socket.ts) — Wire to new `AgentManager.registerAgent()` method that creates folder, scaffolds agent.json + SYSTEM.md + AGENTS.md, adds to settings.agents[], adds ACL entry. Per [n2j36dl7].\n\n2. **Extension loading in `spawnAgent`** (manager.ts) — Read `config.extensions`, resolve paths from `~/.pi/packagemanager/packages/{name}/extensions/`, pass as `additionalExtensionPaths` to `DefaultResourceLoader`. Per [n2j36dl7].\n\n3. **Context percent / tokens / cost** (manager.ts, 7 TODOs) — Read from `session.getContextUsage()` and session stats. Without this, cutoff never triggers and check_status lies. Per [ik1yp2tc].\n\n4. **`agent.peek`** (unix-socket.ts) — Implement basic agent output capture. Per [4o3g4qf3].\n\n5. **Remove `session-factory.ts`** — Dead placeholder, responsibilities absorbed into manager.ts.\n\n6. **Pass `noExtensions: true` to prevent loading project extensions** — Agents should be isolated, only load their own extensions via `additionalExtensionPaths`.",
+      "status": "in-progress",
+      "epicId": "nptk1ujw",
+      "linkedIssueIds": [
+        "rp72xzdz"
+      ],
+      "questions": [],
+      "research": [],
+      "createdAt": "2026-03-16T01:00:23.962Z",
+      "updatedAt": "2026-03-16T01:01:28.457Z",
+      "autoValidation": {
+        "type": "agent",
+        "strategy": "grep for TODO in src/ returns zero results, tsc clean, all tests pass"
       }
     }
   ],
