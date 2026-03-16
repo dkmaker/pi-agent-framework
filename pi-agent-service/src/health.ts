@@ -121,7 +121,7 @@ export class HealthMonitor {
         agent: agentName,
         from: current,
         to: newHealth,
-      } as unknown as Omit<TraceEntry, "id" | "ts">);
+      });
 
       // Notify listeners
       const event: HealthChangeEvent = { agent: agentName, from: current, to: newHealth };

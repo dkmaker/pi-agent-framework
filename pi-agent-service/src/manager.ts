@@ -156,7 +156,7 @@ export class AgentManager {
     // Create SDK session
     const authStorage = AuthStorage.create();
     const modelRegistry = new ModelRegistry(authStorage);
-    const model = getModel(config.provider, config.model);
+    const model = getModel(config.provider as any, config.model as any);
 
     const promptDeps = this.getPromptBuilderDeps();
     const toolCallbacks = this.getToolCallbacks(name);

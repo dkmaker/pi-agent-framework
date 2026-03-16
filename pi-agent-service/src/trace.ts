@@ -46,7 +46,7 @@ export class TraceWriter {
    * Append a trace entry. Assigns id and timestamp automatically.
    * Returns the completed entry.
    */
-  append(fields: Omit<TraceEntry, "id" | "ts"> & { type: TraceEntryType }): TraceEntry {
+  append(fields: { type: TraceEntryType; [key: string]: unknown }): TraceEntry {
     const entry: TraceEntry = {
       id: nanoid(),
       ts: new Date().toISOString(),

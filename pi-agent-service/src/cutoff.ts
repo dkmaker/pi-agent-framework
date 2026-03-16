@@ -48,7 +48,7 @@ export class CutoffMonitor {
         agent: agentName,
         percent: contextPercent,
         level: "hard",
-      } as unknown as Omit<TraceEntry, "id" | "ts">);
+      });
 
       this.notifyListeners({ agent: agentName, percent: contextPercent, level: "hard" });
 
@@ -67,7 +67,7 @@ export class CutoffMonitor {
         agent: agentName,
         percent: contextPercent,
         level: "polite",
-      } as unknown as Omit<TraceEntry, "id" | "ts">);
+      });
 
       this.notifyListeners({ agent: agentName, percent: contextPercent, level: "polite" });
 

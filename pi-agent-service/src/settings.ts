@@ -134,13 +134,13 @@ export class SettingsLoader extends EventEmitter<SettingsEvents> {
     await fs.promises.mkdir(dir, { recursive: true });
 
     // Read or create settings.json
-    let raw: Settings;
+    let raw: Partial<Settings>;
     try {
       const content = await fs.promises.readFile(this.settingsPath, "utf-8");
       raw = JSON.parse(content);
     } catch {
       // File doesn't exist or is invalid — create with defaults
-      raw = {} as Settings;
+      raw = {};
     }
 
     // Deep merge missing fields from defaults
@@ -234,7 +234,7 @@ export class SettingsLoader extends EventEmitter<SettingsEvents> {
  * Deep merge source into target. Source values win.
  * Only merges plain objects — arrays and primitives from source replace target.
  */
-function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T {
+function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
   const result = { ...target };
   for (const key of Object.keys(source) as Array<keyof T>) {
     const sourceVal = source[key];

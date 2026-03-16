@@ -67,7 +67,7 @@ export class MessageRouter {
         priority: msg.priority,
         delivery: msg.delivery,
         status: "dropped",
-      } as unknown as Omit<TraceEntry, "id" | "ts">);
+      });
 
       return { messageId: msg.messageId, threadId: msg.threadId, status: "dropped" };
     }
@@ -104,7 +104,7 @@ export class MessageRouter {
       delivery: msg.delivery,
       replyTo: msg.replyTo,
       status: "queued",
-    } as unknown as Omit<TraceEntry, "id" | "ts">);
+    });
 
     // Queue
     this.enqueue(msg.to, msg);
@@ -128,7 +128,7 @@ export class MessageRouter {
       type: "message_status",
       messageId: msg.messageId,
       status: "delivered",
-    } as unknown as Omit<TraceEntry, "id" | "ts">);
+    });
 
     return msg;
   }
@@ -172,7 +172,7 @@ export class MessageRouter {
       type: "message_status",
       messageId: msg.messageId,
       status: "delivered",
-    } as unknown as Omit<TraceEntry, "id" | "ts">);
+    });
 
     return msg;
   }

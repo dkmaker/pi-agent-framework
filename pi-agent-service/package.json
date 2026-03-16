@@ -6,6 +6,12 @@
   "bin": {
     "pi-agent-service": "./src/index.ts"
   },
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "check": "tsc --noEmit",
+    "test": "tsx test/run-tests.ts",
+    "test:integration": "tsx test/integration-test.ts"
+  },
   "dependencies": {
     "@mariozechner/pi-coding-agent": "^0.58.2",
     "@mariozechner/pi-ai": "^0.58.2",
@@ -13,6 +19,7 @@
     "nanoid": "^5.0.0"
   },
   "devDependencies": {
-    "tsx": "^4.0.0"
+    "tsx": "^4.0.0",
+    "typescript": "^5.7.0"
   }
 }

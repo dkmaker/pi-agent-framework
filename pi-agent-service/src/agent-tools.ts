@@ -7,9 +7,9 @@
  */
 
 import { Type } from "@sinclair/typebox";
+import type { ToolDefinition } from "@mariozechner/pi-coding-agent";
 import type { MessageRouter } from "./router.js";
 import type { TraceWriter } from "./trace.js";
-import type { TraceEntry } from "./types.js";
 
 /**
  * Callbacks the AgentManager provides to the tools.
@@ -28,17 +28,6 @@ export interface AgentToolCallbacks {
   getCost: (agentName: string) => number;
   /** Get uptime */
   getUptime: (agentName: string) => number;
-}
-
-export interface ToolDefinition {
-  name: string;
-  label: string;
-  description: string;
-  parameters: any;
-  execute: (toolCallId: string, params: any, onUpdate: any, ctx: any, signal: any) => Promise<{
-    content: Array<{ type: string; text: string }>;
-    details: Record<string, unknown>;
-  }>;
 }
 
 /**
@@ -75,7 +64,7 @@ function buildSendMessageTool(
       important: Type.Optional(Type.Boolean({ description: "Priority flag, interrupts recipient (default: false)" })),
       thread_id: Type.Optional(Type.String({ description: "Continue existing thread (omit for new)" })),
     }),
-    execute: async (_toolCallId, params) => {
+    execute: async (_toolCallId: string, params: any) => {
       try {
         const result = router.sendMessage({
           from: agentName,
@@ -92,12 +81,12 @@ function buildSendMessageTool(
           .find((t) => t.threadId === result.threadId)?.messageCount ?? 1;
 
         return {
-          content: [{ type: "text", text: `Sent to ${params.to} | Thread: ${result.threadId} (#${count})` }],
+          content: [{ type: "text" as const, text: `Sent to ${params.to} | Thread: ${result.threadId} (#${count})` }],
           details: { messageId: result.messageId, threadId: result.threadId, status: result.status },
         };
       } catch (err: any) {
         return {
-          content: [{ type: "text", text: `Failed to send: ${err.message}` }],
+          content: [{ type: "text" as const, text: `Failed to send: ${err.message}` }],
           details: { error: err.code ?? "UNKNOWN" },
         };
       }
@@ -117,10 +106,10 @@ function buildContextHandoffTool(
       summary: Type.String({ description: "What you were doing, key findings, current state" }),
       continueMessage: Type.String({ description: "Exact prompt for your next session to continue" }),
     }),
-    execute: async (_toolCallId, params) => {
+    execute: async (_toolCallId: string, params: any) => {
       await callbacks.onContextHandoff(agentName, params.summary, params.continueMessage);
       return {
-        content: [{ type: "text", text: "Handoff recorded. Session will reset." }],
+        content: [{ type: "text" as const, text: "Handoff recorded. Session will reset." }],
         details: {},
       };
     },
@@ -139,7 +128,7 @@ function buildListMessagesTool(
       thread_id: Type.Optional(Type.String({ description: "Filter by thread" })),
       limit: Type.Optional(Type.Number({ description: "Max results (default: 10)" })),
     }),
-    execute: async (_toolCallId, params) => {
+    execute: async (_toolCallId: string, params: any) => {
       const messages = router.getMessages({
         agent: agentName,
         threadId: params.thread_id,
@@ -148,7 +137,7 @@ function buildListMessagesTool(
 
       if (messages.length === 0) {
         return {
-          content: [{ type: "text", text: "No messages found." }],
+          content: [{ type: "text" as const, text: "No messages found." }],
           details: {},
         };
       }
@@ -160,7 +149,7 @@ function buildListMessagesTool(
       });
 
       return {
-        content: [{ type: "text", text: lines.join("\n\n") }],
+        content: [{ type: "text" as const, text: lines.join("\n\n") }],
         details: { count: messages.length },
       };
     },
@@ -176,12 +165,12 @@ function buildListThreadsTool(
     label: "List Threads",
     description: "See your active conversation threads.",
     parameters: Type.Object({}),
-    execute: async () => {
+    execute: async (_toolCallId: string, _params: any) => {
       const threads = router.getThreads({ agent: agentName });
 
       if (threads.length === 0) {
         return {
-          content: [{ type: "text", text: "No active threads." }],
+          content: [{ type: "text" as const, text: "No active threads." }],
           details: {},
         };
       }
@@ -191,7 +180,7 @@ function buildListThreadsTool(
       );
 
       return {
-        content: [{ type: "text", text: lines.join("\n") }],
+        content: [{ type: "text" as const, text: lines.join("\n") }],
         details: { count: threads.length },
       };
     },
@@ -207,7 +196,7 @@ function buildCheckStatusTool(
     label: "Check Status",
     description: "Check your own resource usage.",
     parameters: Type.Object({}),
-    execute: async () => {
+    execute: async (_toolCallId: string, _params: any) => {
       const pct = callbacks.getContextPercent(agentName);
       const tokens = callbacks.getTokensUsed(agentName);
       const cost = callbacks.getCost(agentName);
