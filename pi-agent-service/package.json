@@ -1,0 +1,18 @@
+{
+  "name": "pi-agent-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "pi-agent-service": "./src/index.ts"
+  },
+  "dependencies": {
+    "@mariozechner/pi-coding-agent": "^0.58.2",
+    "@mariozechner/pi-ai": "^0.58.2",
+    "@sinclair/typebox": "^0.34.0",
+    "nanoid": "^5.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0"
+  }
+}
