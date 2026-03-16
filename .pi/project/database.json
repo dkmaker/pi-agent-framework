@@ -1131,7 +1131,7 @@
       "type": "spike",
       "title": "E2E test: spawn alice + bob, message-driven conversation with web search",
       "description": "Create a test script that:\n\n1. Starts the agent service with two agents: alice and bob\n2. Bob has web-search extension enabled\n3. ACL allows alice↔bob + manager↔both\n4. Manager sends a message to alice asking her to ask bob to research something\n5. Observe the message chain: manager→alice→bob (web search)→alice→manager\n\nThis proves: agent spawning, message delivery, tool execution, inter-agent communication, and extensions all work end-to-end.",
-      "status": "in-progress",
+      "status": "closed",
       "epicId": "nptk1ujw",
       "linkedIssueIds": [
         "liau7o3p"
@@ -1145,7 +1145,7 @@
         }
       ],
       "createdAt": "2026-03-16T00:55:54.496Z",
-      "updatedAt": "2026-03-16T01:05:58.598Z",
+      "updatedAt": "2026-03-16T01:07:39.859Z",
       "autoValidation": {
         "type": "agent",
         "strategy": "Run the script and observe agents communicating via trace output"
@@ -1153,10 +1153,14 @@
       "validations": [
         {
           "criterion": "Create a test script that:\n\n1. Starts the agent service with two agents: alice and bob\n2. Bob has web-search extension enabled\n3. ACL allows alice↔bob + manager↔both\n4. Manager sends a message to alice asking her to ask bob to research something\n5. Observe the message chain: manager→alice→bob (web search)→alice→manager\n\nThis proves: agent spawning, message delivery, tool execution, inter-agent communication, and extensions all work end-to-end.",
-          "evidence": "User approved: \"Yes, defer and fix TODOs first\". Cannot validate — blocked by unimplemented agent.register, extension loading, context stats.",
-          "met": false
+          "evidence": "Full E2E run: manager→alice \"Research request\" → alice→bob \"Research Request: Tokyo Population\" → bob uses web_search → bob→alice \"Tokyo Population Research Results\" → alice→manager \"Tokyo Population Research Summary\". Completed in 25s. Stats: alice 6463 tokens/$0.0201, bob 7128 tokens/$0.0194. Both idle, clean shutdown.",
+          "met": true
         }
-      ]
+      ],
+      "closeMessage": "E2E works — agents spawn, communicate, use extensions. Commit bf80a59.",
+      "closeReason": "done",
+      "closeCommit": "bf80a59",
+      "closedAt": "2026-03-16T01:07:39.859Z"
     },
     {
       "id": "liau7o3p",
@@ -1187,6 +1191,23 @@
       ],
       "closeCommit": "e178c2d",
       "closedAt": "2026-03-16T01:05:47.289Z"
+    },
+    {
+      "id": "q98wvvfq",
+      "type": "chore",
+      "title": "Expand socket integration test — cover all protocol commands including register, peek, agent lifecycle",
+      "description": "The current integration test (47 tests) skips several protocol commands. Add coverage for:\n\n1. `agent.register` — register a new agent via socket, verify folder scaffolded, settings updated\n2. `agent.unregister` — remove agent, verify settings updated\n3. `agent.peek` — test on offline agent (should error), test response format\n4. `agent.spawn` — can't test with real LLM but verify error handling (graceful failure message)\n5. `agent.stop` / `agent.restart` / `agent.compact` — verify error on offline agents\n6. Second `message.send` — verify threading (same threadId)\n7. `message.send` with ACL denial — verify dropped\n8. `message.send` with priority=important\n9. Multiple `subscribe` — verify subscription list\n10. `trace.query` with filters (type, agent)\n11. Verify `agent.register` updates ACL automatically\n\nAll testable without API keys.",
+      "status": "in-progress",
+      "epicId": "nptk1ujw",
+      "linkedIssueIds": [],
+      "questions": [],
+      "research": [],
+      "createdAt": "2026-03-16T01:09:23.091Z",
+      "updatedAt": "2026-03-16T01:09:32.671Z",
+      "autoValidation": {
+        "type": "agent",
+        "strategy": "Run npm run test:integration — all tests pass including new ones"
+      }
     }
   ],
   "categories": [

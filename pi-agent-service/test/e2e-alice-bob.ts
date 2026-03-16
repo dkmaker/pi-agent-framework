@@ -182,9 +182,7 @@ async function run() {
       }
     }
 
-    console.log(
-      `  ⏳ [${elapsed(startTime)}] alice=${aliceState.status} bob=${bobState.status}`,
-    );
+    console.log(`  ⏳ [${elapsed(startTime)}] alice=${aliceState.status} bob=${bobState.status}`);
   }
 
   // Print final trace summary

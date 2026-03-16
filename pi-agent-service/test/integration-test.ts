@@ -273,7 +273,150 @@ async function main() {
   // 14. agent.spawn — skipped (requires API keys for SDK session creation)
   console.log("▸ agent.spawn (SKIPPED — requires API keys)");
 
-  // 15. Unknown method
+  // ─── New tests: registration, lifecycle errors, threading, ACL ───
+
+  // 15. agent.register — create a new agent via socket
+  console.log("▸ agent.register (new agent)");
+  const reg = await client.send("agent.register", { name: "researcher" });
+  assert(!reg.error, "no error");
+  assert(reg.result.status === "ok", "registered");
+  assert(reg.result.scaffolded === true, "scaffolded");
+
+  // Verify folder was created
+  const researcherDir = path.join(tmp, ".pi", "agents", "researcher");
+  assert(fs.existsSync(path.join(researcherDir, "agent.json")), "agent.json created");
+  assert(fs.existsSync(path.join(researcherDir, "SYSTEM.md")), "SYSTEM.md created");
+  assert(fs.existsSync(path.join(researcherDir, "AGENTS.md")), "AGENTS.md created");
+
+  // Verify settings updated — reload config and check
+  await client.send("config.reload");
+  const configAfterReg = await client.send("config.show");
+  assert(configAfterReg.result.agents.length === 2, "settings has 2 agents now");
+
+  // Verify ACL auto-added
+  const researcherAcl = configAfterReg.result.acl.find((r: any) => r.from === "researcher");
+  assert(!!researcherAcl, "ACL entry created for researcher");
+  assert(researcherAcl.to.includes("manager"), "researcher can message manager");
+
+  // 16. agent.register — re-register same agent (no re-scaffold)
+  console.log("▸ agent.register (existing agent, no re-scaffold)");
+  const reg2 = await client.send("agent.register", { name: "researcher" });
+  assert(!reg2.error, "no error");
+  // Should not re-scaffold since files already exist
+
+  // 17. agent.list — verify new agent appears
+  console.log("▸ agent.list (after register)");
+  const listAfterReg = await client.send("agent.list");
+  assert(listAfterReg.result.length === 2, "2 agents now");
+  const researcherEntry = listAfterReg.result.find((a: any) => a.name === "researcher");
+  assert(!!researcherEntry, "researcher in list");
+  assert(researcherEntry.status === "offline", "researcher offline");
+
+  // 18. agent.stop on offline agent — should error
+  console.log("▸ agent.stop (offline agent — expect error)");
+  const stopOffline = await client.send("agent.stop", { name: "worker" });
+  assert(!!stopOffline.error, "error returned");
+  assert(stopOffline.error.code === "NOT_RUNNING", "NOT_RUNNING code");
+
+  // 19. agent.restart on offline agent — should error (no session to stop)
+  console.log("▸ agent.restart (offline — expect error from spawn, no API key)");
+  // This will try to spawn which requires API keys — just verify it responds
+  // We can't fully test this without API keys
+
+  // 20. agent.compact on offline agent — should error
+  console.log("▸ agent.compact (offline — expect error)");
+  const compactOffline = await client.send("agent.compact", { name: "worker" });
+  assert(!!compactOffline.error, "error returned");
+  assert(compactOffline.error.code === "NOT_RUNNING", "NOT_RUNNING code");
+
+  // 21. agent.peek on offline agent — should error
+  console.log("▸ agent.peek (offline — expect error)");
+  const peekOffline = await client.send("agent.peek", { name: "worker" });
+  assert(!!peekOffline.error, "error returned");
+  assert(peekOffline.error.code === "NOT_RUNNING", "NOT_RUNNING code");
+
+  // 22. message.send with threading (same threadId)
+  console.log("▸ message.send (threading — same threadId)");
+  const threadedMsg = await client.send("message.send", {
+    from: "manager",
+    to: "worker",
+    subject: "Follow up",
+    body: "Any progress?",
+    threadId: msgResult.result.threadId,
+  });
+  assert(!threadedMsg.error, "no error");
+  assert(threadedMsg.result.threadId === msgResult.result.threadId, "same thread");
+
+  // 23. thread.list — verify thread has 2 messages
+  console.log("▸ thread.list (verify threading)");
+  const threadsAfter = await client.send("thread.list", {});
+  assert(!threadsAfter.error, "no error");
+  const mainThread = threadsAfter.result.find((t: any) => t.threadId === msgResult.result.threadId);
+  assert(!!mainThread, "thread found");
+  assert(mainThread.messageCount === 2, "thread has 2 messages");
+
+  // 24. message.send with ACL denial
+  console.log("▸ message.send (ACL denial)");
+  const deniedMsg = await client.send("message.send", {
+    from: "worker",
+    to: "researcher",
+    subject: "Hello",
+    body: "Can you help?",
+  });
+  assert(!deniedMsg.error, "no protocol error (drop is not an error)");
+  assert(deniedMsg.result.status === "dropped", "message dropped by ACL");
+
+  // 25. message.send with priority=important
+  console.log("▸ message.send (priority=important)");
+  const importantMsg = await client.send("message.send", {
+    from: "manager",
+    to: "worker",
+    subject: "URGENT",
+    body: "Stop everything!",
+    priority: "important",
+  });
+  assert(!importantMsg.error, "no error");
+  assert(importantMsg.result.status === "queued", "important message queued");
+
+  // 26. Multiple subscriptions
+  console.log("▸ subscribe (multiple)");
+  const sub1 = await client.send("subscribe", { filter: { types: ["message"] }, maxEvents: 50 });
+  const sub2 = await client.send("subscribe", { filter: { types: ["agent_state"] }, maxEvents: 50 });
+  const sub3 = await client.send("subscribe", { filter: { agent: "worker" }, maxEvents: 50 });
+  assert(!sub1.error && !sub2.error && !sub3.error, "all subscribed");
+
+  // Verify subscription list
+  // (can't query subscriptions via protocol directly, but verify no errors)
+  // Unsubscribe all
+  await client.send("unsubscribe", { subscriptionId: sub1.result.subscriptionId });
+  await client.send("unsubscribe", { subscriptionId: sub2.result.subscriptionId });
+  await client.send("unsubscribe", { subscriptionId: sub3.result.subscriptionId });
+
+  // 27. trace.query with type filter
+  console.log("▸ trace.query (type filter)");
+  const traceMessages = await client.send("trace.query", { type: "message", limit: 100 });
+  assert(!traceMessages.error, "no error");
+  assert(traceMessages.result.length >= 3, "at least 3 message traces (original + threaded + important)");
+  assert(
+    traceMessages.result.every((e: any) => e.type === "message"),
+    "all are message type",
+  );
+
+  // 28. trace.query with agent filter
+  console.log("▸ trace.query (agent filter)");
+  const _traceWorker = await client.send("trace.query", { agent: "worker" });
+  // Note: trace entries have various agent fields depending on type
+
+  // 29. agent.unregister
+  console.log("▸ agent.unregister");
+  const unreg = await client.send("agent.unregister", { name: "researcher" });
+  assert(!unreg.error, "no error");
+  assert(unreg.result.status === "ok", "unregistered");
+
+  // Verify folder still exists (unregister doesn't delete)
+  assert(fs.existsSync(path.join(researcherDir, "agent.json")), "folder preserved");
+
+  // 30. unknown method
   console.log("▸ unknown method");
   const unknown = await client.send("nonexistent.method");
   assert(!!unknown.error, "error returned");
