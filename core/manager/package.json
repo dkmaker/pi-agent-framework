@@ -1,0 +1,7 @@
+{
+  "name": "manager-extension",
+  "keywords": ["pi-package"],
+  "pi": {
+    "extensions": ["index.ts"]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "manager": {
+    "send_to": ["worker", "reviewer", "researcher", "prototyper"],
+    "receive_from": ["worker", "reviewer", "researcher", "prototyper"],
+    "brief": "Manager. Orchestrates work, monitors progress, assigns tasks, handles escalations."
+  },
+  "worker": {
+    "send_to": ["manager", "reviewer"],
+    "receive_from": ["manager", "reviewer"],
+    "brief": "Worker. Implements issues — writes code, tests, commits, closes with evidence."
+  },
+  "reviewer": {
+    "send_to": ["manager", "worker"],
+    "receive_from": ["manager", "worker"],
+    "brief": "Reviewer. Reviews code, validates quality, checks conventions and tests."
+  },
+  "researcher": {
+    "send_to": ["manager", "worker"],
+    "receive_from": ["manager"],
+    "brief": "Researcher. Investigates unknowns, plans architecture, writes spikes and specs."
+  },
+  "prototyper": {
+    "send_to": ["manager", "worker", "researcher"],
+    "receive_from": ["manager", "worker", "researcher"],
+    "brief": "Prototyper. Rapidly validates patterns — builds minimal tests in /tmp, reports evidence."
+  }
+}

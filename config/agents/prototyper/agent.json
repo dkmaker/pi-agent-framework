@@ -1,0 +1,11 @@
+{
+  "provider": "anthropic",
+  "model": "claude-sonnet-4-6",
+  "thinking": "medium",
+  "context_cutoff_pct": 60,
+  "agent_extension": true,
+  "extensions": [
+    "/home/cp/.pi/packagemanager/packages/web-search/extensions/web-search.ts",
+    "/home/cp/.pi/packagemanager/packages/pi-extension-project-management/index.ts"
+  ]
+}

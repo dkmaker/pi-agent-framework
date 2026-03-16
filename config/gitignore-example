@@ -1,0 +1,12 @@
+*/home/auth.json
+*/home/settings.json
+*/home/package.json
+*/home/sessions/
+*/home/bin/
+*/home/.developer-mode-*
+*/home/developer-mode.json
+mailbox/*/inbox/*.md
+mailbox/*/archive/*.md
+mailbox/threads.json
+mailbox/threads.lock
+manager/monitor-state.json

@@ -1,0 +1,82 @@
+{
+  "id": "57a3d25b-0d27-40bd-997c-5a9962f6257c",
+  "query": "latest version of Bun.js and new features 2026",
+  "effort": "search",
+  "recency": "month",
+  "model": "sonar-pro",
+  "answer": "**The latest version of Bun.js is 1.3.10, released on February 25, 2026.**[1][2]\n\n### Key New Features in v1.3.10\n- **Rewritten REPL in Zig**: Starts instantly without npm dependencies, featuring a full terminal UI, persistent history (`~/.bun_repl_history` with Up/Down arrows or Ctrl+P/N), tab completion for properties/commands, multi-line input detection, REPL commands (`.help`, `.exit`, etc.), special variables (`_` for last result, `_error` for last error), and proper semantics like hoisted `const`/`let`, top-level `await`, and dynamic `import` conversion.[1]\n- **Reduced closures in bundled output**: ESM/CJS bundles have less wrapping overhead; e.g., a 23 MB app with 600+ React imports shows significant size reduction.[1]\n- **JavaScriptCore engine upgrades**:\n  | Improvement | Performance Gain |\n  |-------------|------------------|\n  | Deep rope string slicing (e.g., repeated `+=`) | Up to 168x faster |\n  | `String.prototype.endsWith` | Up to 10.5x faster (constant-folded), 1.45x general |\n  | RegExp flag getters (e.g., `.global`) | ~1.6x faster |\n  | `Intl.formatToParts` | Up to 1.15x faster |\n  | Other: Inline `BigInt` digits, optimized string iterators/modulo/JIT threads (3→4) | Varies[1]\n\n### Node.js Compatibility Bugfixes\n- Preserves `AsyncLocalStorage` in `stream.finished` callbacks.\n- `Error.captureStackTrace` now returns error name/message correctly.\n- `http.ClientRequest.write()` multiple calls keep explicit `Content-Length`.\n- `bun build` fixes invalid JS for unused dynamic imports and copies non-JS assets (e.g., `manifest.json`).[1]\n\nNote: A GitHub issue mentions Bun 1.3.11 in a crash report, but no official release details confirm it as stable or latest.[6] Benchmarks prior to v1.3.10 show Bun 1.3.9 excelling in HTTP/JSON tasks.[3] Security support continues for v1.x.[2]",
+  "citations": [
+    "https://bun.com/blog/bun-v1.3.10",
+    "https://endoflife.date/bun",
+    "https://www.repoflow.io/blog/node-js-vs-deno-vs-bun-performance-benchmarks",
+    "https://dev.to/cristiansifuentes/top-10-emerging-javascript-frameworks-to-watch-in-2026-3b1l",
+    "http://oreateai.com/blog/bun-the-javascript-runtime-thats-shaking-things-up/085a30e9802a4b26b043959fe4598975",
+    "https://github.com/oven-sh/bun/issues/27788",
+    "https://www.youtube.com/shorts/k6sRRCeMsak"
+  ],
+  "search_results": [
+    {
+      "title": "Bun v1.3.10 | Bun Blog",
+      "url": "https://bun.com/blog/bun-v1.3.10",
+      "date": "2026-02-26",
+      "last_updated": "2026-03-14",
+      "snippet": "The new REPL starts instantly without downloading any packages, and includes a full-featured terminal UI. In the next version of Bun Bun gets a native REPL pic.",
+      "source": "web"
+    },
+    {
+      "title": "Bun | endoflife.date",
+      "url": "https://endoflife.date/bun",
+      "date": "2026-02-27",
+      "last_updated": "2026-03-10",
+      "snippet": "Bun. framework javascript-runtime. Last updated on 27 February 2026. Bun logo. Bun is an open-source JavaScript runtime that focuses on speed and comes ...",
+      "source": "web"
+    },
+    {
+      "title": "Node.js vs Deno vs Bun Performance Benchmarks - RepoFlow",
+      "url": "https://www.repoflow.io/blog/node-js-vs-deno-vs-bun-performance-benchmarks",
+      "date": "2026-02-17",
+      "last_updated": "2026-03-15",
+      "snippet": "After benchmarking Node.js across versions, we got a lot of requests to compare Node.js to Bun and Deno, so we tested the latest version of each runtime.",
+      "source": "web"
+    },
+    {
+      "title": "Top 10 Emerging JavaScript Frameworks to Watch in 2026",
+      "url": "https://dev.to/cristiansifuentes/top-10-emerging-javascript-frameworks-to-watch-in-2026-3b1l",
+      "date": "2026-02-27",
+      "last_updated": "2026-03-15",
+      "snippet": "Bun unifies runtime, bundler, and server execution. Final Thoughts. Framework choice in 2026 is architectural. Choose based on rendering boundaries, hydration ...",
+      "source": "web"
+    },
+    {
+      "title": "Bun: The JavaScript Runtime That's Shaking Things Up - Oreate AI",
+      "url": "http://oreateai.com/blog/bun-the-javascript-runtime-thats-shaking-things-up/085a30e9802a4b26b043959fe4598975",
+      "snippet": "Since its initial release, it's seen significant updates, with version 1.3 marking a shift towards a more complete full-stack JavaScript development platform.",
+      "source": "web"
+    },
+    {
+      "title": "3.6h runtime on macOS Silicon (Bun 1.3.11) · Issue #27788 - GitHub",
+      "url": "https://github.com/oven-sh/bun/issues/27788",
+      "snippet": "Crash Report. Bun crashed with a segmentation fault after approximately 3.6 hours of runtime. · Environment. Bun version: 1.3. · Crash Details · Memory Stats at ...",
+      "source": "web"
+    },
+    {
+      "title": "JavaScript News 2026 TypeScript 6, TypeScript 7, Bun vs Node.js ...",
+      "url": "https://www.youtube.com/shorts/k6sRRCeMsak",
+      "snippet": "Stay updated with the latest news from the JavaScript ecosystem in 2026. In this video we cover the most important updates that every developer should know.",
+      "source": "web"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 12,
+    "completion_tokens": 480,
+    "total_tokens": 492,
+    "search_context_size": "low",
+    "cost": {
+      "input_tokens_cost": 0.00004,
+      "output_tokens_cost": 0.0072,
+      "request_cost": 0.006,
+      "total_cost": 0.01324
+    }
+  },
+  "cachedAt": "2026-03-15T21:29:49.917Z"
+}

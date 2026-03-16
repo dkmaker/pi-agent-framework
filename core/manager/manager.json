@@ -1,0 +1,7 @@
+{
+  "context_cutoff_pct": 60,
+  "monitor": {
+    "interval_seconds": 60,
+    "max_turns": 50
+  }
+}

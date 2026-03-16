@@ -1,0 +1,3 @@
+{"from":"manager","to":"alice","content":"Hello Alice! Please say hi to Bob for me.","timestamp":1773611827637}
+{"from":"manager","to":"alice","content":"Hello Alice! Please say hi to Bob for me.","timestamp":1773611879896}
+{"from":"alice","to":"manager","content":"I don't have the ability to contact Bob — I can only send messages to you (manager) or myself; there's no agent named \"bob\" available.","timestamp":1773611883622}

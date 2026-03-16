@@ -1,0 +1,7 @@
+{
+  "name": "agent-extension",
+  "keywords": ["pi-package"],
+  "pi": {
+    "extensions": ["index.ts"]
+  }
+}
