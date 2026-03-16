@@ -823,30 +823,41 @@
       "type": "feature",
       "title": "Trace writer and query API",
       "description": "Implement `src/trace.ts` — the `TraceWriter` class:\n\n- Append-only JSONL to `service.trace_file` path\n- `append(entry)` — assigns nanoid `id`, ISO timestamp, writes line\n- `query(opts)` — sequential scan from end, filters by agent/type/threadId/after/before/limit\n- All 13 entry types from asset [f5z68c4v]\n- File auto-created on first write\n- Graceful handling of missing/corrupt file\n\nNo dependency on other service components — standalone module.",
-      "status": "in-progress",
+      "status": "closed",
       "epicId": "nptk1ujw",
       "linkedIssueIds": [],
       "questions": [],
       "research": [],
       "createdAt": "2026-03-16T00:23:25.130Z",
-      "updatedAt": "2026-03-16T00:32:37.716Z",
+      "updatedAt": "2026-03-16T00:33:26.352Z",
       "autoValidation": {
         "type": "agent",
         "strategy": "Write tests that append entries, query with filters, verify JSONL format"
-      }
+      },
+      "closeMessage": "TraceWriter implemented. Commit 6941288.",
+      "closeReason": "done",
+      "validations": [
+        {
+          "criterion": "Implement `src/trace.ts` — the `TraceWriter` class:\n\n- Append-only JSONL to `service.trace_file` path\n- `append(entry)` — assigns nanoid `id`, ISO timestamp, writes line\n- `query(opts)` — sequential scan from end, filters by agent/type/threadId/after/before/limit\n- All 13 entry types from asset [f5z68c4v]\n- File auto-created on first write\n- Graceful handling of missing/corrupt file\n\nNo dependency on other service components — standalone module.",
+          "evidence": "Test ran successfully: append creates entries with nanoid id + ISO ts. JSONL verified (5 lines). Query filters: type=message→1, agent=worker→3, threadId=t1→1, multi-type [agent_spawned,agent_state]→2, readAll→5. File auto-created. ALL TESTS PASSED.",
+          "met": true
+        }
+      ],
+      "closeCommit": "6941288",
+      "closedAt": "2026-03-16T00:33:26.352Z"
     },
     {
       "id": "nqrmi7te",
       "type": "feature",
       "title": "Message router with ACL, threading, and queue",
       "description": "Implement `src/router.ts` — the `MessageRouter` class:\n\n- `sendMessage(msg)` → ACL check, thread assignment, trace, queue or deliver\n- `getMessages(opts)` / `getThreads(opts)` — query from trace\n- Thread auto-creation (new threadId if none provided)\n- Thread limit: 100 messages per thread\n- ACL enforcement: check sender→recipient permission from in-memory ACL\n- Per-agent message queues (for offline/working agents)\n- Queue drain: `drainQueue(name)` returns oldest message\n- Priority handling: normal vs important (important → steer, normal → queue)\n\nDependencies: TraceWriter (for logging), SettingsLoader (for ACL).\nDoes NOT handle delivery to sessions — that's AgentManager's job.",
-      "status": "draft",
+      "status": "in-progress",
       "epicId": "nptk1ujw",
       "linkedIssueIds": [],
       "questions": [],
       "research": [],
       "createdAt": "2026-03-16T00:23:34.013Z",
-      "updatedAt": "2026-03-16T00:23:34.013Z",
+      "updatedAt": "2026-03-16T00:33:33.880Z",
       "autoValidation": {
         "type": "agent",
         "strategy": "Write tests: ACL allow/deny, thread creation, queue/drain, thread limit enforcement"
