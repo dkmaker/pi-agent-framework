@@ -12,10 +12,10 @@
  * - Handles graceful shutdown on SIGTERM/SIGINT
  */
 
-import * as fs from "fs";
-import * as path from "path";
-import { AgentManager } from "./manager.js";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { UnixSocketAdapter } from "./adapters/unix-socket.js";
+import { AgentManager } from "./manager.js";
 
 interface CliArgs {
   projectRoot: string;
@@ -47,7 +47,7 @@ function checkSingleton(pidFile: string): void {
   try {
     const pidStr = fs.readFileSync(pidFile, "utf-8").trim();
     const pid = parseInt(pidStr, 10);
-    if (!isNaN(pid)) {
+    if (!Number.isNaN(pid)) {
       try {
         // Check if process is alive (signal 0 = no signal, just check)
         process.kill(pid, 0);

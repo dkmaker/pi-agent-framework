@@ -9,7 +9,7 @@
  */
 
 import { nanoid } from "nanoid";
-import type { Subscription, EventFilter, TraceEntry, TraceEntryType } from "./types.js";
+import type { EventFilter, Subscription, TraceEntry } from "./types.js";
 
 const MAX_SUBSCRIPTIONS = 20;
 
@@ -28,9 +28,7 @@ export class SubscriptionManager {
    */
   subscribe(filter: EventFilter, maxEvents: number): string {
     // Check limit
-    const activeCount = Array.from(this.subscriptions.values()).filter(
-      (s) => s.status === "active",
-    ).length;
+    const activeCount = Array.from(this.subscriptions.values()).filter((s) => s.status === "active").length;
     if (activeCount >= MAX_SUBSCRIPTIONS) {
       throw new Error(`Maximum ${MAX_SUBSCRIPTIONS} active subscriptions reached`);
     }
@@ -67,9 +65,7 @@ export class SubscriptionManager {
    * Get active subscriptions only.
    */
   getActiveSubscriptions(): Subscription[] {
-    return Array.from(this.subscriptions.values()).filter(
-      (s) => s.status === "active",
-    );
+    return Array.from(this.subscriptions.values()).filter((s) => s.status === "active");
   }
 
   /**

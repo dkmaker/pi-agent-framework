@@ -7,8 +7,8 @@
  * Reference: asset [f5z68c4v]
  */
 
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { nanoid } from "nanoid";
 import type { TraceEntry, TraceEntryType } from "./types.js";
 
@@ -53,7 +53,7 @@ export class TraceWriter {
       ...fields,
     };
 
-    const line = JSON.stringify(entry) + "\n";
+    const line = `${JSON.stringify(entry)}\n`;
     if (this.fd !== null) {
       fs.writeSync(this.fd, line);
     }
@@ -67,11 +67,7 @@ export class TraceWriter {
    */
   query(opts: TraceQueryOpts = {}): TraceEntry[] {
     const limit = Math.min(opts.limit ?? 50, 500);
-    const types = opts.type
-      ? Array.isArray(opts.type)
-        ? opts.type
-        : [opts.type]
-      : undefined;
+    const types = opts.type ? (Array.isArray(opts.type) ? opts.type : [opts.type]) : undefined;
 
     // Read all lines
     let content: string;

@@ -10,15 +10,19 @@
     "start": "tsx src/index.ts",
     "check": "tsc --noEmit",
     "test": "tsx test/run-tests.ts",
-    "test:integration": "tsx test/integration-test.ts"
+    "test:integration": "tsx test/integration-test.ts",
+    "lint": "biome check src/ test/",
+    "format": "biome format --write src/ test/",
+    "format:check": "biome format src/ test/"
   },
   "dependencies": {
-    "@mariozechner/pi-coding-agent": "^0.58.2",
     "@mariozechner/pi-ai": "^0.58.2",
+    "@mariozechner/pi-coding-agent": "^0.58.2",
     "@sinclair/typebox": "^0.34.0",
     "nanoid": "^5.0.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.7",
     "tsx": "^4.0.0",
     "typescript": "^5.7.0"
   }

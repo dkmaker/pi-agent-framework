@@ -8,7 +8,6 @@
  * Reference: asset [ik1yp2tc]
  */
 
-import type { TraceEntry } from "./types.js";
 import type { TraceWriter } from "./trace.js";
 
 export interface CutoffState {
@@ -91,7 +90,7 @@ export class CutoffMonitor {
   /**
    * Get the steering message for hard cutoff.
    */
-  getSteerMessage(agentName: string, contextPercent: number): string {
+  getSteerMessage(_agentName: string, contextPercent: number): string {
     return `STOP. Context at ${contextPercent}%. Call context_handoff NOW.`;
   }
 

@@ -8,39 +8,38 @@
  * References: assets [i5eisc9o], [0osnjjl4], [ik1yp2tc]
  */
 
+import * as path from "node:path";
+import { getModel } from "@mariozechner/pi-ai";
 import {
   AuthStorage,
+  codingTools,
   createAgentSession,
+  DefaultResourceLoader,
   ModelRegistry,
   SessionManager,
-  DefaultResourceLoader,
   SettingsManager,
-  codingTools,
 } from "@mariozechner/pi-coding-agent";
-import { getModel } from "@mariozechner/pi-ai";
-import * as path from "path";
-
+import { type AgentToolCallbacks, buildAgentTools } from "./agent-tools.js";
+import { CutoffMonitor } from "./cutoff.js";
+import { HealthMonitor } from "./health.js";
+import { buildMessageOverview, buildSystemPrompt, type PromptBuilderDeps } from "./prompt-builder.js";
+import { MessageRouter, type SendMessageOpts } from "./router.js";
+import { SettingsLoader } from "./settings.js";
+import { type SubscriptionEvent, SubscriptionManager } from "./subscriptions.js";
+import { type TraceQueryOpts, TraceWriter } from "./trace.js";
 import type {
-  ManagedAgent,
+  AclRule,
+  AgentConfig,
   AgentState,
   AgentSummary,
-  AgentConfig,
+  EventFilter,
+  ManagedAgent,
   Message,
   MessageResult,
+  Settings,
   ThreadSummary,
   TraceEntry,
-  Settings,
-  AclRule,
-  EventFilter,
 } from "./types.js";
-import { SettingsLoader } from "./settings.js";
-import { TraceWriter, type TraceQueryOpts } from "./trace.js";
-import { MessageRouter, type SendMessageOpts } from "./router.js";
-import { HealthMonitor } from "./health.js";
-import { CutoffMonitor } from "./cutoff.js";
-import { SubscriptionManager, type SubscriptionEvent } from "./subscriptions.js";
-import { buildSystemPrompt, buildMessageOverview, type PromptBuilderDeps } from "./prompt-builder.js";
-import { buildAgentTools, type AgentToolCallbacks } from "./agent-tools.js";
 
 export interface AgentManagerOptions {
   projectRoot: string;
@@ -78,15 +77,7 @@ export class AgentManager {
     const cutoffMonitor = new CutoffMonitor(trace);
     const subscriptions = new SubscriptionManager();
 
-    const manager = new AgentManager(
-      opts.projectRoot,
-      settings,
-      trace,
-      router,
-      health,
-      cutoffMonitor,
-      subscriptions,
-    );
+    const manager = new AgentManager(opts.projectRoot, settings, trace, router, health, cutoffMonitor, subscriptions);
 
     // Wire health/cutoff events to subscriptions
     health.onHealthChange((event) => {
@@ -117,7 +108,8 @@ export class AgentManager {
 
     // Recovery from existing trace
     const existingEntries = trace.readAll();
-    if (existingEntries.length > 1) { // more than just the service_started we just wrote
+    if (existingEntries.length > 1) {
+      // more than just the service_started we just wrote
       router.restoreFromTrace(existingEntries);
       const pendingMessages = existingEntries.filter(
         (e) => e.type === "message" && (e as any).status === "queued",
@@ -132,9 +124,7 @@ export class AgentManager {
     // Auto-spawn agents with auto_spawn=true
     for (const config of settings.getAllAgentConfigs()) {
       if (config.auto_spawn) {
-        await manager.spawnAgent(config.name).catch((err) =>
-          console.error(`Auto-spawn ${config.name} failed: ${err}`),
-        );
+        await manager.spawnAgent(config.name).catch((err) => console.error(`Auto-spawn ${config.name} failed: ${err}`));
       }
     }
 
@@ -144,7 +134,7 @@ export class AgentManager {
   // ─── Agent Lifecycle ──────────────────────────────────────────
 
   async spawnAgent(name: string): Promise<void> {
-    if (this.agents.has(name) && this.agents.get(name)!.session) {
+    if (this.agents.has(name) && this.agents.get(name)?.session) {
       throw new ManagerError("ALREADY_RUNNING", `Agent ${name} is already running`);
     }
 
@@ -439,7 +429,7 @@ export class AgentManager {
         this.health.start(agentName);
         break;
 
-      case "agent_end":
+      case "agent_end": {
         this.transitionState(agentName, "online-working", "online-idle");
         this.health.stop(agentName);
 
@@ -467,6 +457,7 @@ export class AgentManager {
         // Drain message queue
         this.drainAndDeliver(agentName);
         break;
+      }
 
       case "tool_execution_end":
         if (this.cutoff.isHardSteering(agentName) && managed.session) {
@@ -484,11 +475,7 @@ export class AgentManager {
     }
   }
 
-  private transitionState(
-    agentName: string,
-    from: string,
-    to: string,
-  ): void {
+  private transitionState(agentName: string, from: string, to: string): void {
     const managed = this.agents.get(agentName);
     if (managed) {
       managed.status = to as any;
@@ -503,10 +490,7 @@ export class AgentManager {
     this.subscriptions.match(entry);
   }
 
-  private async tryDeliverMessage(
-    agentName: string,
-    result: MessageResult,
-  ): Promise<void> {
+  private async tryDeliverMessage(agentName: string, _result: MessageResult): Promise<void> {
     const managed = this.agents.get(agentName);
     if (!managed?.session) return;
 
@@ -525,9 +509,7 @@ export class AgentManager {
         const msg = this.router.drainImportant(agentName);
         if (msg) {
           this.router.markRead(agentName, 1);
-          await managed.session.steer(
-            `⚡ IMPORTANT message from ${msg.from}: ${msg.subject}\n\n${msg.body}`,
-          );
+          await managed.session.steer(`⚡ IMPORTANT message from ${msg.from}: ${msg.subject}\n\n${msg.body}`);
         }
       }
       // Normal messages wait for agent_end
@@ -581,9 +563,9 @@ export class AgentManager {
     };
   }
 
-  private getToolCallbacks(agentName: string): AgentToolCallbacks {
+  private getToolCallbacks(_agentName: string): AgentToolCallbacks {
     return {
-      onMessageSent: (from, to, messageId, threadId) => {
+      onMessageSent: (_from, to, messageId, threadId) => {
         // Trigger delivery for recipient
         this.tryDeliverMessage(to, { messageId, threadId, status: "queued" });
       },

@@ -13,9 +13,9 @@
  * Reference: asset [f5z68c4v]
  */
 
-import type { TraceEntry } from "./types.js";
 import type { MessageRouter } from "./router.js";
 import type { TraceWriter } from "./trace.js";
+import type { TraceEntry } from "./types.js";
 
 export interface RecoveryResult {
   recoveredAgents: string[];
@@ -26,11 +26,7 @@ export interface RecoveryResult {
  * Recover state from trace entries.
  * Called during AgentManager.create() if trace.jsonl exists.
  */
-export function recoverFromTrace(
-  entries: TraceEntry[],
-  router: MessageRouter,
-  trace: TraceWriter,
-): RecoveryResult {
+export function recoverFromTrace(entries: TraceEntry[], router: MessageRouter, trace: TraceWriter): RecoveryResult {
   // Restore router state (queues + threads)
   router.restoreFromTrace(entries);
 

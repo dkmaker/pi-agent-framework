@@ -11,9 +11,9 @@
  * Reference: asset [gzoe99o0]
  */
 
-import * as fs from "fs";
-import * as path from "path";
-import type { AgentConfig, AclRule } from "./types.js";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import type { AclRule, AgentConfig } from "./types.js";
 
 const UNATTENDED_INSTRUCTIONS = `
 ## Operating Mode
@@ -53,10 +53,7 @@ export interface PromptBuilderDeps {
 /**
  * Build the system prompt for an agent. Called per-turn (re-reads SYSTEM.md).
  */
-export function buildSystemPrompt(
-  agentName: string,
-  deps: PromptBuilderDeps,
-): string {
+export function buildSystemPrompt(agentName: string, deps: PromptBuilderDeps): string {
   const config = deps.getAgentConfig(agentName);
   if (!config) {
     return `You are agent "${agentName}". No configuration found.\n\n${UNATTENDED_INSTRUCTIONS}`;
@@ -139,9 +136,7 @@ function readSystemMd(agentName: string, deps: PromptBuilderDeps): string | null
           return null;
         }
       }
-    } catch {
-      continue;
-    }
+    } catch {}
   }
   return null;
 }
@@ -160,12 +155,7 @@ function buildAddressBook(agentName: string, deps: PromptBuilderDeps): string | 
   // Also check if manager can message this agent (implicit)
   // Manager is always available
 
-  const lines: string[] = [
-    "## Available Agents",
-    "",
-    "You can message the following agents:",
-    "",
-  ];
+  const lines: string[] = ["## Available Agents", "", "You can message the following agents:", ""];
 
   for (const target of canMessage) {
     if (target === "manager") {

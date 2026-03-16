@@ -11,16 +11,11 @@
  * Reference: asset [n2j36dl7]
  */
 
-import { EventEmitter } from "events";
-import * as fs from "fs";
-import * as path from "path";
-import type {
-  Settings,
-  AgentConfig,
-  AclRule,
-  AgentDefaults,
-} from "./types.js";
-import { DEFAULT_SETTINGS, DEFAULT_AGENT_CONFIG } from "./types.js";
+import { EventEmitter } from "node:events";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import type { AclRule, AgentConfig, Settings } from "./types.js";
+import { DEFAULT_AGENT_CONFIG, DEFAULT_SETTINGS } from "./types.js";
 
 export interface SettingsEvents {
   changed: [settings: Settings];
@@ -47,12 +42,8 @@ export class SettingsLoader extends EventEmitter<SettingsEvents> {
    * Reads settings.json (creating with defaults if missing),
    * merges missing fields, loads all agent configs.
    */
-  static async create(
-    projectRoot: string,
-    settingsPath?: string,
-  ): Promise<SettingsLoader> {
-    const resolved =
-      settingsPath ?? path.join(projectRoot, ".pi", "agents", "settings.json");
+  static async create(projectRoot: string, settingsPath?: string): Promise<SettingsLoader> {
+    const resolved = settingsPath ?? path.join(projectRoot, ".pi", "agents", "settings.json");
     const loader = new SettingsLoader(projectRoot, resolved);
     await loader.loadSettings();
     loader.startWatching();
@@ -71,9 +62,7 @@ export class SettingsLoader extends EventEmitter<SettingsEvents> {
   }
 
   getAllAgentConfigs(): AgentConfig[] {
-    return Array.from(this.agentConfigs.values()).map((c) =>
-      structuredClone(c),
-    );
+    return Array.from(this.agentConfigs.values()).map((c) => structuredClone(c));
   }
 
   getAcl(): AclRule[] {
@@ -156,9 +145,7 @@ export class SettingsLoader extends EventEmitter<SettingsEvents> {
         const config = await this.loadAgentConfig(agentPath);
         this.agentConfigs.set(config.name, config);
       } catch (err) {
-        console.error(
-          `Failed to load agent config at ${agentPath}: ${err}`,
-        );
+        console.error(`Failed to load agent config at ${agentPath}: ${err}`);
       }
     }
   }
@@ -193,10 +180,7 @@ export class SettingsLoader extends EventEmitter<SettingsEvents> {
 
     // Rewrite agent.json so all fields are present
     await fs.promises.mkdir(absPath, { recursive: true });
-    await fs.promises.writeFile(
-      configPath,
-      JSON.stringify(config, null, 2) + "\n",
-    );
+    await fs.promises.writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`);
 
     return config;
   }
@@ -204,10 +188,7 @@ export class SettingsLoader extends EventEmitter<SettingsEvents> {
   private async writeSettings(): Promise<void> {
     const dir = path.dirname(this.settingsPath);
     await fs.promises.mkdir(dir, { recursive: true });
-    await fs.promises.writeFile(
-      this.settingsPath,
-      JSON.stringify(this.settings, null, 2) + "\n",
-    );
+    await fs.promises.writeFile(this.settingsPath, `${JSON.stringify(this.settings, null, 2)}\n`);
   }
 
   private startWatching(): void {
@@ -216,9 +197,7 @@ export class SettingsLoader extends EventEmitter<SettingsEvents> {
         // Debounce — multiple change events fire in quick succession
         if (this.debounceTimer) clearTimeout(this.debounceTimer);
         this.debounceTimer = setTimeout(() => {
-          this.reloadSettings().catch((err) =>
-            console.error(`Settings reload failed: ${err}`),
-          );
+          this.reloadSettings().catch((err) => console.error(`Settings reload failed: ${err}`));
         }, 200);
       });
     } catch {
@@ -249,10 +228,7 @@ function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>)
       targetVal !== null &&
       !Array.isArray(targetVal)
     ) {
-      result[key] = deepMerge(
-        targetVal as Record<string, unknown>,
-        sourceVal as Record<string, unknown>,
-      ) as T[keyof T];
+      result[key] = deepMerge(targetVal as Record<string, unknown>, sourceVal as Record<string, unknown>) as T[keyof T];
     } else if (sourceVal !== undefined) {
       result[key] = sourceVal as T[keyof T];
     }

@@ -4,16 +4,16 @@
  * Usage: npm test (or: npx tsx test/run-tests.ts)
  */
 
-import * as fs from "fs";
-import * as path from "path";
-import { SettingsLoader } from "../src/settings.js";
-import { TraceWriter } from "../src/trace.js";
-import { MessageRouter, RouterError } from "../src/router.js";
-import { HealthMonitor } from "../src/health.js";
-import { CutoffMonitor } from "../src/cutoff.js";
-import { SubscriptionManager } from "../src/subscriptions.js";
-import { buildSystemPrompt, buildMessageOverview } from "../src/prompt-builder.js";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { buildAgentTools } from "../src/agent-tools.js";
+import { CutoffMonitor } from "../src/cutoff.js";
+import { HealthMonitor } from "../src/health.js";
+import { buildMessageOverview, buildSystemPrompt } from "../src/prompt-builder.js";
+import { MessageRouter } from "../src/router.js";
+import { SettingsLoader } from "../src/settings.js";
+import { SubscriptionManager } from "../src/subscriptions.js";
+import { TraceWriter } from "../src/trace.js";
 import type { TraceEntry } from "../src/types.js";
 
 let passed = 0;
@@ -203,8 +203,12 @@ function testSubscriptions() {
   console.log("▸ Subscriptions");
   const mgr = new SubscriptionManager();
 
-  const entry = (type: string, extra: Record<string, unknown> = {}): TraceEntry =>
-    ({ id: "t", ts: new Date().toISOString(), type: type as any, ...extra });
+  const entry = (type: string, extra: Record<string, unknown> = {}): TraceEntry => ({
+    id: "t",
+    ts: new Date().toISOString(),
+    type: type as any,
+    ...extra,
+  });
 
   // Subscribe + match
   const id1 = mgr.subscribe({ types: ["message"] }, 3);
@@ -231,7 +235,11 @@ function testSubscriptions() {
   const mgr2 = new SubscriptionManager();
   for (let i = 0; i < 20; i++) mgr2.subscribe({}, 100);
   let threw = false;
-  try { mgr2.subscribe({}, 100); } catch { threw = true; }
+  try {
+    mgr2.subscribe({}, 100);
+  } catch {
+    threw = true;
+  }
   assert(threw, "max 20 limit");
 
   mgr.dispose();
@@ -249,10 +257,13 @@ async function testPromptAndTools() {
   fs.mkdirSync(agentDir, { recursive: true });
   fs.writeFileSync(path.join(agentDir, "agent.json"), JSON.stringify({ name: "worker", brief: "Codes stuff." }));
   fs.writeFileSync(path.join(agentDir, "SYSTEM.md"), "# Worker\nYou are a worker.");
-  fs.writeFileSync(path.join(tmp, ".pi/agents/settings.json"), JSON.stringify({
-    agents: [".pi/agents/worker"],
-    acl: [{ from: "worker", to: ["reviewer"] }],
-  }));
+  fs.writeFileSync(
+    path.join(tmp, ".pi/agents/settings.json"),
+    JSON.stringify({
+      agents: [".pi/agents/worker"],
+      acl: [{ from: "worker", to: ["reviewer"] }],
+    }),
+  );
 
   const settings = await SettingsLoader.create(tmp);
   const trace = await TraceWriter.create(`${tmp}/trace.jsonl`);
@@ -298,7 +309,13 @@ async function testPromptAndTools() {
   assert(tools.map((t) => t.name).includes("check_status"), "has check_status");
 
   // Execute send_message
-  const sendResult = await tools[0].execute("tc1", { to: "manager", subject: "Done", message: "OK" }, undefined, undefined, {} as any);
+  const sendResult = await tools[0].execute(
+    "tc1",
+    { to: "manager", subject: "Done", message: "OK" },
+    undefined,
+    undefined,
+    {} as any,
+  );
   assert((sendResult.content[0] as any).text.includes("Sent to manager"), "send works");
 
   // Execute check_status

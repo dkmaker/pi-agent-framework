@@ -1075,16 +1075,44 @@
       "type": "chore",
       "title": "Manual integration test — service + socket without manager extension",
       "description": "Create a manual integration test that exercises the full service without needing the manager extension or API keys.\n\nThe test script should:\n\n1. **Start service programmatically** — `AgentManager.create()` + `UnixSocketAdapter.start()`\n2. **Register a mock agent** — write agent.json + SYSTEM.md to a temp dir, add to settings.agents\n3. **Connect to socket** — open Unix socket, send NDJSON commands\n4. **Test all non-spawn commands:**\n   - `service.ping` → verify uptime + agent count\n   - `config.show` → verify settings returned\n   - `config.reload` → verify ok\n   - `acl.update` → verify ACL change persists\n   - `agent.list` → verify registered agents appear (offline)\n   - `agent.status` → verify offline state\n   - `agent.config` → verify config returned (no paths leaked)\n   - `message.send` → send manager→agent message, verify queued\n   - `message.list` → verify message appears\n   - `thread.list` → verify thread created\n   - `trace.query` → verify trace entries\n   - `subscribe` / `unsubscribe` → verify subscription lifecycle\n   - `service.shutdown` → verify clean exit\n5. **Verify trace.jsonl** — read file, confirm entries are valid JSONL\n6. **Verify PID file** — created on start, removed on shutdown\n\nThis proves everything works except actual LLM calls (agent.spawn). That gets tested when we have the manager extension or add mock sessions later.",
-      "status": "in-progress",
+      "status": "closed",
       "epicId": "nptk1ujw",
       "linkedIssueIds": [],
       "questions": [],
       "research": [],
       "createdAt": "2026-03-16T00:46:27.702Z",
-      "updatedAt": "2026-03-16T00:51:59.163Z",
+      "updatedAt": "2026-03-16T00:53:32.375Z",
       "autoValidation": {
         "type": "agent",
         "strategy": "Run the test script and verify all commands return expected responses"
+      },
+      "closeMessage": "Integration test complete — 47 tests. Commit 2ed557c.",
+      "closeReason": "done",
+      "validations": [
+        {
+          "criterion": "Create a manual integration test that exercises the full service without needing the manager extension or API keys.\n\nThe test script should:\n\n1. **Start service programmatically** — `AgentManager.create()` + `UnixSocketAdapter.start()`\n2. **Register a mock agent** — write agent.json + SYSTEM.md to a temp dir, add to settings.agents\n3. **Connect to socket** — open Unix socket, send NDJSON commands\n4. **Test all non-spawn commands:**\n   - `service.ping` → verify uptime + agent count\n   - `config.show` → verify settings returned\n   - `config.reload` → verify ok\n   - `acl.update` → verify ACL change persists\n   - `agent.list` → verify registered agents appear (offline)\n   - `agent.status` → verify offline state\n   - `agent.config` → verify config returned (no paths leaked)\n   - `message.send` → send manager→agent message, verify queued\n   - `message.list` → verify message appears\n   - `thread.list` → verify thread created\n   - `trace.query` → verify trace entries\n   - `subscribe` / `unsubscribe` → verify subscription lifecycle\n   - `service.shutdown` → verify clean exit\n5. **Verify trace.jsonl** — read file, confirm entries are valid JSONL\n6. **Verify PID file** — created on start, removed on shutdown\n\nThis proves everything works except actual LLM calls (agent.spawn). That gets tested when we have the manager extension or add mock sessions later.",
+          "evidence": "npm run test:integration output: 47 tests: 47 passed, 0 failed. All protocol commands tested over Unix socket: service.ping, config.show/reload, acl.update (persisted), agent.list/status/config, message.send (queued), message.list, thread.list, subscribe/unsubscribe, trace.query (has service_started + message entries), error codes (INVALID_PARAMS, NOT_FOUND), trace.jsonl file validity, socket cleanup.",
+          "met": true
+        }
+      ],
+      "closeCommit": "2ed557c",
+      "closedAt": "2026-03-16T00:53:32.375Z"
+    },
+    {
+      "id": "xzbtq3z4",
+      "type": "chore",
+      "title": "Add Biome linter and formatter — zero issues",
+      "description": "Add Biome as linter and formatter for pi-agent-service:\n\n1. Install `@biomejs/biome` as devDependency\n2. Create `biome.json` config (sensible defaults, match project style — tabs/spaces, quotes, etc.)\n3. Add npm scripts: `lint`, `format`, `format:check`\n4. Fix ALL lint and formatting issues across `src/` and `test/`\n5. Zero errors on `npm run lint` and `npm run format:check`",
+      "status": "in-progress",
+      "epicId": "nptk1ujw",
+      "linkedIssueIds": [],
+      "questions": [],
+      "research": [],
+      "createdAt": "2026-03-16T00:53:46.817Z",
+      "updatedAt": "2026-03-16T00:53:54.739Z",
+      "autoValidation": {
+        "type": "agent",
+        "strategy": "Run npm run lint and npm run format:check — both must exit 0 with no issues"
       }
     }
   ],

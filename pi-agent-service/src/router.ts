@@ -9,15 +9,9 @@
  */
 
 import { nanoid } from "nanoid";
-import type {
-  AclRule,
-  Message,
-  MessageResult,
-  ThreadSummary,
-  TraceEntry,
-} from "./types.js";
-import type { TraceWriter } from "./trace.js";
 import type { SettingsLoader } from "./settings.js";
+import type { TraceWriter } from "./trace.js";
+import type { Message, MessageResult, ThreadSummary, TraceEntry } from "./types.js";
 
 export interface SendMessageOpts {
   from: string;
@@ -37,7 +31,10 @@ export class MessageRouter {
   private queues: Map<string, Message[]> = new Map();
 
   /** Thread metadata */
-  private threads: Map<string, { participants: Set<string>; messageCount: number; lastActivity: string; subject: string }> = new Map();
+  private threads: Map<
+    string,
+    { participants: Set<string>; messageCount: number; lastActivity: string; subject: string }
+  > = new Map();
 
   /** Message stats per agent */
   private stats: Map<string, { sent: number; received: number; unread: number }> = new Map();
@@ -317,7 +314,7 @@ export class MessageRouter {
     if (!this.queues.has(agentName)) {
       this.queues.set(agentName, []);
     }
-    this.queues.get(agentName)!.push(msg);
+    this.queues.get(agentName)?.push(msg);
   }
 
   private updateThread(msg: Pick<Message, "threadId" | "from" | "to" | "subject" | "timestamp">): void {

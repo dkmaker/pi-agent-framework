@@ -6,11 +6,11 @@
  * Usage: npm run test:integration
  */
 
-import * as net from "net";
-import * as fs from "fs";
-import * as path from "path";
-import { AgentManager } from "../src/manager.js";
+import * as fs from "node:fs";
+import * as net from "node:net";
+import * as path from "node:path";
 import { UnixSocketAdapter } from "../src/adapters/unix-socket.js";
+import { AgentManager } from "../src/manager.js";
 
 let passed = 0;
 let failed = 0;
@@ -50,7 +50,7 @@ class TestClient {
           if (!line.trim()) continue;
           const msg = JSON.parse(line);
           if (msg.id && this.pending.has(msg.id)) {
-            this.pending.get(msg.id)!.resolve(msg);
+            this.pending.get(msg.id)?.resolve(msg);
             this.pending.delete(msg.id);
           } else if (msg.event) {
             this.events.push(msg);
@@ -69,11 +69,17 @@ class TestClient {
       }, 5000);
 
       this.pending.set(id, {
-        resolve: (v) => { clearTimeout(timeout); resolve(v); },
-        reject: (e) => { clearTimeout(timeout); reject(e); },
+        resolve: (v) => {
+          clearTimeout(timeout);
+          resolve(v);
+        },
+        reject: (e) => {
+          clearTimeout(timeout);
+          reject(e);
+        },
       });
 
-      this.socket.write(JSON.stringify({ id, method, params }) + "\n");
+      this.socket.write(`${JSON.stringify({ id, method, params })}\n`);
     });
   }
 
@@ -101,25 +107,31 @@ async function main() {
   // Set up a mock agent (no actual spawning)
   const agentDir = path.join(tmp, "agents", "worker");
   fs.mkdirSync(agentDir, { recursive: true });
-  fs.writeFileSync(path.join(agentDir, "agent.json"), JSON.stringify({
-    name: "worker",
-    brief: "Implements features.",
-    auto_spawn: false,
-  }));
+  fs.writeFileSync(
+    path.join(agentDir, "agent.json"),
+    JSON.stringify({
+      name: "worker",
+      brief: "Implements features.",
+      auto_spawn: false,
+    }),
+  );
   fs.writeFileSync(path.join(agentDir, "SYSTEM.md"), "# Worker\nYou code things.");
 
   // Write settings
   const settingsDir = path.join(tmp, ".pi", "agents");
   fs.mkdirSync(settingsDir, { recursive: true });
-  fs.writeFileSync(path.join(settingsDir, "settings.json"), JSON.stringify({
-    agents: ["agents/worker"],
-    acl: [{ from: "worker", to: ["manager"] }],
-    service: {
-      socket_path: socketPath,
-      pid_file: pidFile,
-      trace_file: traceFile,
-    },
-  }));
+  fs.writeFileSync(
+    path.join(settingsDir, "settings.json"),
+    JSON.stringify({
+      agents: ["agents/worker"],
+      acl: [{ from: "worker", to: ["manager"] }],
+      service: {
+        socket_path: socketPath,
+        pid_file: pidFile,
+        trace_file: traceFile,
+      },
+    }),
+  );
 
   // Start service
   console.log("▸ Starting service...");
@@ -281,7 +293,11 @@ async function main() {
   // Verify all lines are valid JSON
   let allValid = true;
   for (const line of traceLines) {
-    try { JSON.parse(line); } catch { allValid = false; }
+    try {
+      JSON.parse(line);
+    } catch {
+      allValid = false;
+    }
   }
   assert(allValid, "all trace lines are valid JSON");
 

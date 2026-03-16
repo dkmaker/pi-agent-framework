@@ -6,8 +6,8 @@
  * Reference: asset [0l0qkut7]
  */
 
-import { Type } from "@sinclair/typebox";
 import type { ToolDefinition } from "@mariozechner/pi-coding-agent";
+import { Type } from "@sinclair/typebox";
 import type { MessageRouter } from "./router.js";
 import type { TraceWriter } from "./trace.js";
 
@@ -36,7 +36,7 @@ export interface AgentToolCallbacks {
 export function buildAgentTools(
   agentName: string,
   router: MessageRouter,
-  trace: TraceWriter,
+  _trace: TraceWriter,
   callbacks: AgentToolCallbacks,
 ): ToolDefinition[] {
   return [
@@ -48,11 +48,7 @@ export function buildAgentTools(
   ];
 }
 
-function buildSendMessageTool(
-  agentName: string,
-  router: MessageRouter,
-  callbacks: AgentToolCallbacks,
-): ToolDefinition {
+function buildSendMessageTool(agentName: string, router: MessageRouter, callbacks: AgentToolCallbacks): ToolDefinition {
   return {
     name: "send_message",
     label: "Send Message",
@@ -77,8 +73,8 @@ function buildSendMessageTool(
 
         callbacks.onMessageSent(agentName, params.to, result.messageId, result.threadId);
 
-        const count = router.getThreads({ agent: agentName })
-          .find((t) => t.threadId === result.threadId)?.messageCount ?? 1;
+        const count =
+          router.getThreads({ agent: agentName }).find((t) => t.threadId === result.threadId)?.messageCount ?? 1;
 
         return {
           content: [{ type: "text" as const, text: `Sent to ${params.to} | Thread: ${result.threadId} (#${count})` }],
@@ -94,10 +90,7 @@ function buildSendMessageTool(
   };
 }
 
-function buildContextHandoffTool(
-  agentName: string,
-  callbacks: AgentToolCallbacks,
-): ToolDefinition {
+function buildContextHandoffTool(agentName: string, callbacks: AgentToolCallbacks): ToolDefinition {
   return {
     name: "context_handoff",
     label: "Context Handoff",
@@ -116,10 +109,7 @@ function buildContextHandoffTool(
   };
 }
 
-function buildListMessagesTool(
-  agentName: string,
-  router: MessageRouter,
-): ToolDefinition {
+function buildListMessagesTool(agentName: string, router: MessageRouter): ToolDefinition {
   return {
     name: "list_messages",
     label: "List Messages",
@@ -144,7 +134,7 @@ function buildListMessagesTool(
 
       const lines = messages.map((m) => {
         const dir = m.from === agentName ? `→ ${m.to}` : `← ${m.from}`;
-        const preview = m.body.length > 100 ? m.body.slice(0, 100) + "..." : m.body;
+        const preview = m.body.length > 100 ? `${m.body.slice(0, 100)}...` : m.body;
         return `[${m.timestamp}] ${dir} | ${m.subject}\n  ${preview}`;
       });
 
@@ -156,10 +146,7 @@ function buildListMessagesTool(
   };
 }
 
-function buildListThreadsTool(
-  agentName: string,
-  router: MessageRouter,
-): ToolDefinition {
+function buildListThreadsTool(agentName: string, router: MessageRouter): ToolDefinition {
   return {
     name: "list_threads",
     label: "List Threads",
@@ -175,8 +162,9 @@ function buildListThreadsTool(
         };
       }
 
-      const lines = threads.map((t) =>
-        `- "${t.subject}" with ${t.participants.filter((p) => p !== agentName).join(", ")} (${t.messageCount} msgs, last: ${t.lastActivity})`,
+      const lines = threads.map(
+        (t) =>
+          `- "${t.subject}" with ${t.participants.filter((p) => p !== agentName).join(", ")} (${t.messageCount} msgs, last: ${t.lastActivity})`,
       );
 
       return {
@@ -187,10 +175,7 @@ function buildListThreadsTool(
   };
 }
 
-function buildCheckStatusTool(
-  agentName: string,
-  callbacks: AgentToolCallbacks,
-): ToolDefinition {
+function buildCheckStatusTool(agentName: string, callbacks: AgentToolCallbacks): ToolDefinition {
   return {
     name: "check_status",
     label: "Check Status",
@@ -202,15 +187,18 @@ function buildCheckStatusTool(
       const cost = callbacks.getCost(agentName);
       const uptime = callbacks.getUptime(agentName);
 
-      const uptimeStr = uptime > 3600
-        ? `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m`
-        : `${Math.floor(uptime / 60)}m`;
+      const uptimeStr =
+        uptime > 3600
+          ? `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m`
+          : `${Math.floor(uptime / 60)}m`;
 
       return {
-        content: [{
-          type: "text",
-          text: `Context: ${pct}% | Tokens: ${tokens.toLocaleString()} | Cost: $${cost.toFixed(4)} | Uptime: ${uptimeStr}`,
-        }],
+        content: [
+          {
+            type: "text",
+            text: `Context: ${pct}% | Tokens: ${tokens.toLocaleString()} | Cost: $${cost.toFixed(4)} | Uptime: ${uptimeStr}`,
+          },
+        ],
         details: { contextPercent: pct, tokensUsed: tokens, cost, uptime },
       };
     },

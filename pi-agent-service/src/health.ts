@@ -9,13 +9,13 @@
  * Reference: asset [ik1yp2tc]
  */
 
-import type { AgentHealth, TraceEntry } from "./types.js";
 import type { TraceWriter } from "./trace.js";
+import type { AgentHealth } from "./types.js";
 
 const HEALTH_CHECK_INTERVAL = 5_000; // 5 seconds
 const SLOW_THRESHOLD = 10_000; // 10 seconds
 const STUCK_THRESHOLD = 60_000; // 60 seconds
-const NO_EVENT_THRESHOLD = 120_000; // 120 seconds
+const _NO_EVENT_THRESHOLD = 120_000; // 120 seconds
 
 export interface HealthChangeEvent {
   agent: string;

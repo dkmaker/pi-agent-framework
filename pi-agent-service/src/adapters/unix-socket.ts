@@ -7,15 +7,10 @@
  * Reference: asset [4o3g4qf3]
  */
 
-import * as net from "net";
-import * as fs from "fs";
+import * as fs from "node:fs";
+import * as net from "node:net";
 import type { AgentManager } from "../manager.js";
-import type {
-  ProtocolRequest,
-  ProtocolResponse,
-  ProtocolEvent,
-  ProtocolErrorCode,
-} from "../types.js";
+import type { ProtocolErrorCode, ProtocolEvent, ProtocolRequest, ProtocolResponse } from "../types.js";
 
 export class UnixSocketAdapter {
   private server: net.Server | null = null;
@@ -43,8 +38,8 @@ export class UnixSocketAdapter {
     });
 
     return new Promise((resolve, reject) => {
-      this.server!.on("error", reject);
-      this.server!.listen(this.socketPath, () => {
+      this.server?.on("error", reject);
+      this.server?.listen(this.socketPath, () => {
         resolve();
       });
     });
@@ -69,11 +64,13 @@ export class UnixSocketAdapter {
     // Close server
     if (this.server) {
       return new Promise((resolve) => {
-        this.server!.close(() => {
+        this.server?.close(() => {
           // Clean up socket file
           try {
             fs.unlinkSync(this.socketPath);
-          } catch { /* ignore */ }
+          } catch {
+            /* ignore */
+          }
           resolve();
         });
       });
@@ -206,10 +203,7 @@ export class UnixSocketAdapter {
       // Subscriptions
       case "subscribe":
         return {
-          subscriptionId: this.manager.subscribe(
-            params.filter as any,
-            params.maxEvents as number,
-          ),
+          subscriptionId: this.manager.subscribe(params.filter as any, params.maxEvents as number),
         };
 
       case "unsubscribe":
@@ -263,7 +257,7 @@ export class UnixSocketAdapter {
 
   private send(socket: net.Socket, response: ProtocolResponse): void {
     try {
-      socket.write(JSON.stringify(response) + "\n");
+      socket.write(`${JSON.stringify(response)}\n`);
     } catch {
       // Client disconnected
     }
@@ -271,7 +265,7 @@ export class UnixSocketAdapter {
 
   private pushEvent(socket: net.Socket, event: ProtocolEvent): void {
     try {
-      socket.write(JSON.stringify(event) + "\n");
+      socket.write(`${JSON.stringify(event)}\n`);
     } catch {
       // Client disconnected
     }
