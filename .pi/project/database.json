@@ -1131,7 +1131,7 @@
       "type": "spike",
       "title": "E2E test: spawn alice + bob, message-driven conversation with web search",
       "description": "Create a test script that:\n\n1. Starts the agent service with two agents: alice and bob\n2. Bob has web-search extension enabled\n3. ACL allows alice↔bob + manager↔both\n4. Manager sends a message to alice asking her to ask bob to research something\n5. Observe the message chain: manager→alice→bob (web search)→alice→manager\n\nThis proves: agent spawning, message delivery, tool execution, inter-agent communication, and extensions all work end-to-end.",
-      "status": "closed",
+      "status": "in-progress",
       "epicId": "nptk1ujw",
       "linkedIssueIds": [
         "liau7o3p"
@@ -1145,28 +1145,25 @@
         }
       ],
       "createdAt": "2026-03-16T00:55:54.496Z",
-      "updatedAt": "2026-03-16T01:01:24.216Z",
+      "updatedAt": "2026-03-16T01:05:58.598Z",
       "autoValidation": {
         "type": "agent",
         "strategy": "Run the script and observe agents communicating via trace output"
       },
-      "closeMessage": "Deferred pending TODO fixes (liau7o3p).",
-      "closeReason": "deferred",
       "validations": [
         {
           "criterion": "Create a test script that:\n\n1. Starts the agent service with two agents: alice and bob\n2. Bob has web-search extension enabled\n3. ACL allows alice↔bob + manager↔both\n4. Manager sends a message to alice asking her to ask bob to research something\n5. Observe the message chain: manager→alice→bob (web search)→alice→manager\n\nThis proves: agent spawning, message delivery, tool execution, inter-agent communication, and extensions all work end-to-end.",
           "evidence": "User approved: \"Yes, defer and fix TODOs first\". Cannot validate — blocked by unimplemented agent.register, extension loading, context stats.",
           "met": false
         }
-      ],
-      "closedAt": "2026-03-16T01:01:24.216Z"
+      ]
     },
     {
       "id": "liau7o3p",
       "type": "bug",
       "title": "Fix all agent service TODOs — registration, extensions, context stats, peek",
       "description": "There are 11 TODOs across the agent service that were left as stubs during initial implementation. All belong to THIS epic per the requirement assets.\n\n**Fixes needed:**\n\n1. **`agent.register` / `agent.unregister`** (unix-socket.ts) — Wire to new `AgentManager.registerAgent()` method that creates folder, scaffolds agent.json + SYSTEM.md + AGENTS.md, adds to settings.agents[], adds ACL entry. Per [n2j36dl7].\n\n2. **Extension loading in `spawnAgent`** (manager.ts) — Read `config.extensions`, resolve paths from `~/.pi/packagemanager/packages/{name}/extensions/`, pass as `additionalExtensionPaths` to `DefaultResourceLoader`. Per [n2j36dl7].\n\n3. **Context percent / tokens / cost** (manager.ts, 7 TODOs) — Read from `session.getContextUsage()` and session stats. Without this, cutoff never triggers and check_status lies. Per [ik1yp2tc].\n\n4. **`agent.peek`** (unix-socket.ts) — Implement basic agent output capture. Per [4o3g4qf3].\n\n5. **Remove `session-factory.ts`** — Dead placeholder, responsibilities absorbed into manager.ts.\n\n6. **Pass `noExtensions: true` to prevent loading project extensions** — Agents should be isolated, only load their own extensions via `additionalExtensionPaths`.",
-      "status": "in-progress",
+      "status": "closed",
       "epicId": "nptk1ujw",
       "linkedIssueIds": [
         "rp72xzdz"
@@ -1174,11 +1171,22 @@
       "questions": [],
       "research": [],
       "createdAt": "2026-03-16T01:00:23.962Z",
-      "updatedAt": "2026-03-16T01:01:28.457Z",
+      "updatedAt": "2026-03-16T01:05:47.289Z",
       "autoValidation": {
         "type": "agent",
         "strategy": "grep for TODO in src/ returns zero results, tsc clean, all tests pass"
-      }
+      },
+      "closeMessage": "All agent service TODOs fixed. Commit e178c2d.",
+      "closeReason": "done",
+      "validations": [
+        {
+          "criterion": "There are 11 TODOs across the agent service that were left as stubs during initial implementation. All belong to THIS epic per the requirement assets.\n\n**Fixes needed:**\n\n1. **`agent.register` / `agent.unregister`** (unix-socket.ts) — Wire to new `AgentManager.registerAgent()` method that creates folder, scaffolds agent.json + SYSTEM.md + AGENTS.md, adds to settings.agents[], adds ACL entry. Per [n2j36dl7].\n\n2. **Extension loading in `spawnAgent`** (manager.ts) — Read `config.extensions`, resolve paths from `~/.pi/packagemanager/packages/{name}/extensions/`, pass as `additionalExtensionPaths` to `DefaultResourceLoader`. Per [n2j36dl7].\n\n3. **Context percent / tokens / cost** (manager.ts, 7 TODOs) — Read from `session.getContextUsage()` and session stats. Without this, cutoff never triggers and check_status lies. Per [ik1yp2tc].\n\n4. **`agent.peek`** (unix-socket.ts) — Implement basic agent output capture. Per [4o3g4qf3].\n\n5. **Remove `session-factory.ts`** — Dead placeholder, responsibilities absorbed into manager.ts.\n\n6. **Pass `noExtensions: true` to prevent loading project extensions** — Agents should be isolated, only load their own extensions via `additionalExtensionPaths`.",
+          "evidence": "`grep -rn \"// TODO\" src/` → ZERO results. tsc --noEmit → CLEAN. npm test → 61 passed. npm run test:integration → 47 passed. biome check → no issues. session-factory.ts deleted. All 11 TODOs resolved.",
+          "met": true
+        }
+      ],
+      "closeCommit": "e178c2d",
+      "closedAt": "2026-03-16T01:05:47.289Z"
     }
   ],
   "categories": [

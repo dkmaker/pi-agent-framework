@@ -13,7 +13,8 @@
     "test:integration": "tsx test/integration-test.ts",
     "lint": "biome check src/ test/",
     "format": "biome format --write src/ test/",
-    "format:check": "biome format src/ test/"
+    "format:check": "biome format src/ test/",
+    "e2e": "tsx test/e2e-alice-bob.ts"
   },
   "dependencies": {
     "@mariozechner/pi-ai": "^0.58.2",
