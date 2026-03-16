@@ -767,30 +767,41 @@
       "type": "chore",
       "title": "Scaffold pi-agent-service package",
       "description": "Create the `pi-agent-service/` package structure:\n\n- `package.json` with dependencies (`@mariozechner/pi-ai` for SDK, `@sinclair/typebox`, `nanoid`)\n- `tsconfig.json` \n- `src/` directory with skeleton `index.ts` (CLI entry point — just arg parsing + \"not implemented\")\n- Shared types file (`src/types.ts`) with all core interfaces: `ManagedAgent`, `AgentState`, `AgentConfig`, `Message`, `ThreadSummary`, `TraceEntry`, `TraceEntryType`, `Settings`, `AclRule`, `EventFilter`, `Subscription`\n\nThis is pure scaffolding — no logic, just structure and types from the requirement assets.",
-      "status": "in-progress",
+      "status": "closed",
       "epicId": "nptk1ujw",
       "linkedIssueIds": [],
       "questions": [],
       "research": [],
       "createdAt": "2026-03-16T00:23:08.678Z",
-      "updatedAt": "2026-03-16T00:29:11.879Z",
+      "updatedAt": "2026-03-16T00:30:49.436Z",
       "autoValidation": {
         "type": "agent",
         "strategy": "Verify package.json is valid, types.ts compiles, and directory structure matches the reference file structure asset"
-      }
+      },
+      "closeMessage": "Package scaffolded with full type definitions and directory structure matching the reference architecture. Committed as b4789ab.",
+      "closeReason": "done",
+      "validations": [
+        {
+          "criterion": "Create the `pi-agent-service/` package structure:\n\n- `package.json` with dependencies (`@mariozechner/pi-ai` for SDK, `@sinclair/typebox`, `nanoid`)\n- `tsconfig.json` \n- `src/` directory with skeleton `index.ts` (CLI entry point — just arg parsing + \"not implemented\")\n- Shared types file (`src/types.ts`) with all core interfaces: `ManagedAgent`, `AgentState`, `AgentConfig`, `Message`, `ThreadSummary`, `TraceEntry`, `TraceEntryType`, `Settings`, `AclRule`, `EventFilter`, `Subscription`\n\nThis is pure scaffolding — no logic, just structure and types from the requirement assets.",
+          "evidence": "Validation: 1) package.json valid — npm install succeeded, all deps resolved. 2) types.ts compiles — npx tsx src/index.ts runs without import/type errors. 3) Directory structure matches reference: src/{index,manager,session-factory,router,trace,recovery,cutoff,health,subscriptions,settings,agent-tools,prompt-builder,types}.ts + src/adapters/unix-socket.ts. All interfaces defined: ManagedAgent, AgentState, AgentConfig, Message, ThreadSummary, TraceEntry, TraceEntryType, Settings, AclRule, EventFilter, Subscription, plus ProtocolRequest/Response/Event, defaults constants.",
+          "met": true
+        }
+      ],
+      "closeCommit": "b4789ab",
+      "closedAt": "2026-03-16T00:30:49.436Z"
     },
     {
       "id": "ldj9694v",
       "type": "feature",
       "title": "Settings loader with fs.watch and default merging",
       "description": "Implement `src/settings.ts` — the `SettingsLoader` class:\n\n- `SettingsLoader.create(projectRoot, settingsPath?)` — async factory\n- Reads and parses `settings.json` with full schema validation\n- Deep merges missing fields into existing files (both settings.json and per-agent agent.json)\n- `fs.watch()` on settings.json — on change, re-reads and updates in-memory state\n- Emits change events (simple EventEmitter) so other components react to ACL/config changes\n- `getSettings()`, `getAgentConfig(name)`, `getAcl()`, `reloadSettings()`\n- `updateAcl(rules)` — writes back to settings.json\n\nSchemas defined in asset [n2j36dl7]. No dependency on other service components.",
-      "status": "draft",
+      "status": "in-progress",
       "epicId": "nptk1ujw",
       "linkedIssueIds": [],
       "questions": [],
       "research": [],
       "createdAt": "2026-03-16T00:23:17.326Z",
-      "updatedAt": "2026-03-16T00:23:17.326Z",
+      "updatedAt": "2026-03-16T00:31:16.487Z",
       "autoValidation": {
         "type": "agent",
         "strategy": "Write unit tests that verify: default creation, field merging, ACL read/write, change event emission"
