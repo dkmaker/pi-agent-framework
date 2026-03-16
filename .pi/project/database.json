@@ -907,17 +907,28 @@
       "type": "feature",
       "title": "Prompt builder and agent tools factory",
       "description": "Implement `src/prompt-builder.ts` and `src/agent-tools.ts`:\n\n**Prompt builder:**\n- `buildSystemPrompt(agentName)` — returns string, rebuilt per turn\n- Assembly order per [gzoe99o0]: SYSTEM.md (re-read from disk) → coding guidelines → brief injection → address book (ACL-filtered) → unattended instructions\n- Address book built from in-memory ACL + agent briefs\n\n**Agent tools factory:**\n- `buildAgentTools(agentName, router, manager)` — returns `customTools` array for SDK\n- 5 tools per [0l0qkut7]: send_message, context_handoff, list_messages, list_threads, check_status\n- Each tool's execute handler wires to router/manager methods\n\nDependencies: SettingsLoader (ACL, agent configs), MessageRouter, TraceWriter.",
-      "status": "in-progress",
+      "status": "closed",
       "epicId": "nptk1ujw",
       "linkedIssueIds": [],
       "questions": [],
       "research": [],
       "createdAt": "2026-03-16T00:23:53.065Z",
-      "updatedAt": "2026-03-16T00:37:20.229Z",
+      "updatedAt": "2026-03-16T00:39:17.252Z",
       "autoValidation": {
         "type": "agent",
         "strategy": "Test prompt assembly output includes all sections in order, test tool factory returns correct tool definitions"
-      }
+      },
+      "closeMessage": "Prompt builder and agent tools factory implemented. Commit 8e3e4a4.",
+      "closeReason": "done",
+      "validations": [
+        {
+          "criterion": "Implement `src/prompt-builder.ts` and `src/agent-tools.ts`:\n\n**Prompt builder:**\n- `buildSystemPrompt(agentName)` — returns string, rebuilt per turn\n- Assembly order per [gzoe99o0]: SYSTEM.md (re-read from disk) → coding guidelines → brief injection → address book (ACL-filtered) → unattended instructions\n- Address book built from in-memory ACL + agent briefs\n\n**Agent tools factory:**\n- `buildAgentTools(agentName, router, manager)` — returns `customTools` array for SDK\n- 5 tools per [0l0qkut7]: send_message, context_handoff, list_messages, list_threads, check_status\n- Each tool's execute handler wires to router/manager methods\n\nDependencies: SettingsLoader (ACL, agent configs), MessageRouter, TraceWriter.",
+          "evidence": "Prompt: SYSTEM.md ✓, coding guidelines ✓, brief ✓, address book with manager ✓, unattended instructions ✓. Tools: 5 tools returned (send_message, context_handoff, list_messages, list_threads, check_status), send routes via router, handoff triggers callback, status returns 45%/12500 tokens/$0.0234/1h 1m. ALL TESTS PASSED.",
+          "met": true
+        }
+      ],
+      "closeCommit": "8e3e4a4",
+      "closedAt": "2026-03-16T00:39:17.252Z"
     },
     {
       "id": "azebrfiw",
@@ -952,13 +963,13 @@
       "type": "feature",
       "title": "AgentManager core — session lifecycle, message delivery, event wiring",
       "description": "Implement `src/manager.ts` — the `AgentManager` class that ties everything together:\n\n- `AgentManager.create({ projectRoot })` — async factory, loads settings, inits trace, recovers state\n- `spawnAgent(name)` — creates SDK `AgentSession` with `systemPromptOverride` (function), `customTools`, session subscriptions (agent_start, agent_end, tool_execution_end, text_delta)\n- `stopAgent(name)` / `restartAgent(name)` / `compactAgent(name)`\n- `getAgentState(name)` / `listAgents()`\n- Wires session events to state machine, health monitor, cutoff, queue drain\n- Message delivery loop: on agent_end → check cutoff → drain queue → prompt if messages\n- On sendMessage while idle → immediate `session.prompt()`\n- Important messages while working → `session.steer()`\n- `context_handoff` tool triggers `session.newSession()` + rebuild + prompt\n\nThis is the integration issue — depends on all previous components. Per [i5eisc9o] and [0osnjjl4].",
-      "status": "draft",
+      "status": "in-progress",
       "epicId": "nptk1ujw",
       "linkedIssueIds": [],
       "questions": [],
       "research": [],
       "createdAt": "2026-03-16T00:24:15.905Z",
-      "updatedAt": "2026-03-16T00:24:15.905Z",
+      "updatedAt": "2026-03-16T00:39:25.501Z",
       "autoValidation": {
         "type": "agent",
         "strategy": "Integration test with mocked SDK session: spawn agent, send message, verify state transitions and queue drain"
