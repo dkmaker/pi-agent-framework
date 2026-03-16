@@ -851,30 +851,41 @@
       "type": "feature",
       "title": "Message router with ACL, threading, and queue",
       "description": "Implement `src/router.ts` — the `MessageRouter` class:\n\n- `sendMessage(msg)` → ACL check, thread assignment, trace, queue or deliver\n- `getMessages(opts)` / `getThreads(opts)` — query from trace\n- Thread auto-creation (new threadId if none provided)\n- Thread limit: 100 messages per thread\n- ACL enforcement: check sender→recipient permission from in-memory ACL\n- Per-agent message queues (for offline/working agents)\n- Queue drain: `drainQueue(name)` returns oldest message\n- Priority handling: normal vs important (important → steer, normal → queue)\n\nDependencies: TraceWriter (for logging), SettingsLoader (for ACL).\nDoes NOT handle delivery to sessions — that's AgentManager's job.",
-      "status": "in-progress",
+      "status": "closed",
       "epicId": "nptk1ujw",
       "linkedIssueIds": [],
       "questions": [],
       "research": [],
       "createdAt": "2026-03-16T00:23:34.013Z",
-      "updatedAt": "2026-03-16T00:33:33.880Z",
+      "updatedAt": "2026-03-16T00:34:50.990Z",
       "autoValidation": {
         "type": "agent",
         "strategy": "Write tests: ACL allow/deny, thread creation, queue/drain, thread limit enforcement"
-      }
+      },
+      "closeMessage": "MessageRouter implemented. Commit 0b54bdc.",
+      "closeReason": "done",
+      "validations": [
+        {
+          "criterion": "Implement `src/router.ts` — the `MessageRouter` class:\n\n- `sendMessage(msg)` → ACL check, thread assignment, trace, queue or deliver\n- `getMessages(opts)` / `getThreads(opts)` — query from trace\n- Thread auto-creation (new threadId if none provided)\n- Thread limit: 100 messages per thread\n- ACL enforcement: check sender→recipient permission from in-memory ACL\n- Per-agent message queues (for offline/working agents)\n- Queue drain: `drainQueue(name)` returns oldest message\n- Priority handling: normal vs important (important → steer, normal → queue)\n\nDependencies: TraceWriter (for logging), SettingsLoader (for ACL).\nDoes NOT handle delivery to sessions — that's AgentManager's job.",
+          "evidence": "Test output: ACL allow worker→reviewer=queued, ACL deny worker→unknown=dropped, manager→worker=queued (always allowed). Queue drain returns oldest (Task). Important priority drain works (Urgent drained first, Normal remains). Thread tracking: 2 msgs, participants=reviewer,worker. Thread limit enforced at 100 (THREAD_LIMIT error). Stats: received>0, unread>0. State recovery from trace: threads restored. ALL TESTS PASSED.",
+          "met": true
+        }
+      ],
+      "closeCommit": "0b54bdc",
+      "closedAt": "2026-03-16T00:34:50.990Z"
     },
     {
       "id": "dkdythr2",
       "type": "feature",
       "title": "Agent state machine, health monitor, and cutoff",
       "description": "Implement `src/health.ts` and `src/cutoff.ts`:\n\n**State machine** (in ManagedAgent):\n- States: offline → online-idle → online-working, with transitions per [ik1yp2tc]\n- All transitions traced\n\n**Health monitor** (`HealthMonitor`):\n- Per-agent 5s interval timer, started on agent_start, stopped on agent_end\n- Token gap detection: healthy (<10s), slow (10-60s), stuck (>60s or no events 120s)\n- Emits health change events, traces transitions\n\n**Cutoff monitor** (`CutoffMonitor`):\n- Checks `session.getContextUsage().percent` on agent_end\n- Polite cutoff: enqueues warning message when threshold hit\n- Hard cutoff: sets `hardSteering` flag, steers on `tool_execution_end`\n- Reset on context_handoff\n\nDependencies: TraceWriter, SettingsLoader (for thresholds).",
-      "status": "draft",
+      "status": "in-progress",
       "epicId": "nptk1ujw",
       "linkedIssueIds": [],
       "questions": [],
       "research": [],
       "createdAt": "2026-03-16T00:23:43.848Z",
-      "updatedAt": "2026-03-16T00:23:43.848Z",
+      "updatedAt": "2026-03-16T00:34:58.511Z",
       "autoValidation": {
         "type": "agent",
         "strategy": "Test state transitions, health detection logic with mocked timers, cutoff threshold checks"
