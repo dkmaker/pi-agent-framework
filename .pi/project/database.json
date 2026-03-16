@@ -907,13 +907,13 @@
       "type": "feature",
       "title": "Prompt builder and agent tools factory",
       "description": "Implement `src/prompt-builder.ts` and `src/agent-tools.ts`:\n\n**Prompt builder:**\n- `buildSystemPrompt(agentName)` — returns string, rebuilt per turn\n- Assembly order per [gzoe99o0]: SYSTEM.md (re-read from disk) → coding guidelines → brief injection → address book (ACL-filtered) → unattended instructions\n- Address book built from in-memory ACL + agent briefs\n\n**Agent tools factory:**\n- `buildAgentTools(agentName, router, manager)` — returns `customTools` array for SDK\n- 5 tools per [0l0qkut7]: send_message, context_handoff, list_messages, list_threads, check_status\n- Each tool's execute handler wires to router/manager methods\n\nDependencies: SettingsLoader (ACL, agent configs), MessageRouter, TraceWriter.",
-      "status": "draft",
+      "status": "in-progress",
       "epicId": "nptk1ujw",
       "linkedIssueIds": [],
       "questions": [],
       "research": [],
       "createdAt": "2026-03-16T00:23:53.065Z",
-      "updatedAt": "2026-03-16T00:23:53.065Z",
+      "updatedAt": "2026-03-16T00:37:20.229Z",
       "autoValidation": {
         "type": "agent",
         "strategy": "Test prompt assembly output includes all sections in order, test tool factory returns correct tool definitions"
@@ -924,17 +924,28 @@
       "type": "feature",
       "title": "Subscription manager (manager-only bounded events)",
       "description": "Implement `src/subscriptions.ts` — the `SubscriptionManager`:\n\n- `subscribe(filter, maxEvents)` → returns subscriptionId\n- `unsubscribe(id)` — cancel subscription\n- `getSubscriptions()` — list active\n- `match(traceEntry)` — check all subscriptions, return matching ones, increment counters\n- Auto-expire when `deliveredCount >= maxEvents`\n- Max 20 active subscriptions\n- No auto-renew\n\nPer [il2m3sl0]. The manager extension creates auto-subscriptions on connect (message.received, state_changed, health_changed, context_warning).\n\nNo dependency on other service components — operates on TraceEntry filter matching.",
-      "status": "in-progress",
+      "status": "closed",
       "epicId": "nptk1ujw",
       "linkedIssueIds": [],
       "questions": [],
       "research": [],
       "createdAt": "2026-03-16T00:24:03.127Z",
-      "updatedAt": "2026-03-16T00:36:11.783Z",
+      "updatedAt": "2026-03-16T00:37:12.585Z",
       "autoValidation": {
         "type": "agent",
         "strategy": "Test subscribe/match/expire lifecycle, max subscription limit, filter matching"
-      }
+      },
+      "closeMessage": "SubscriptionManager implemented. Commit 64d6b4c.",
+      "closeReason": "done",
+      "validations": [
+        {
+          "criterion": "Implement `src/subscriptions.ts` — the `SubscriptionManager`:\n\n- `subscribe(filter, maxEvents)` → returns subscriptionId\n- `unsubscribe(id)` — cancel subscription\n- `getSubscriptions()` — list active\n- `match(traceEntry)` — check all subscriptions, return matching ones, increment counters\n- Auto-expire when `deliveredCount >= maxEvents`\n- Max 20 active subscriptions\n- No auto-renew\n\nPer [il2m3sl0]. The manager extension creates auto-subscriptions on connect (message.received, state_changed, health_changed, context_warning).\n\nNo dependency on other service components — operates on TraceEntry filter matching.",
+          "evidence": "Test verified: subscribe/match/expire lifecycle (3 events → expired), type filter matching (message yes, agent_state no), agent filter (worker yes, reviewer no), unsubscribe works, cancelAll clears active, listener fired on match, max 20 active enforced. ALL TESTS PASSED.",
+          "met": true
+        }
+      ],
+      "closeCommit": "64d6b4c",
+      "closedAt": "2026-03-16T00:37:12.585Z"
     },
     {
       "id": "9o5k4osh",
